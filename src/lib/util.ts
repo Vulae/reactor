@@ -64,25 +64,6 @@ export class IntervalCaller {
     }
 }
 
-export function formatBigNumber(number: number): string {
-    number = Math.floor(number);
-    if (number < 1e6) {
-        return new Intl.NumberFormat('en-us', {
-            notation: 'standard'
-        }).format(number);
-    }
-    if (number < 1e15) {
-        return new Intl.NumberFormat('en-us', {
-            notation: 'compact',
-            minimumFractionDigits: 2
-        }).format(number);
-    }
-    return new Intl.NumberFormat('en-us', {
-        notation: 'scientific',
-        minimumFractionDigits: 2
-    }).format(number);
-}
-
 export const resize: Action<HTMLElement, (width: number, height: number) => void> = (
     node,
     callbackfn
@@ -120,3 +101,15 @@ export const visibility: Action<
         }
     };
 };
+
+export function notNull<T>(value: T | null): value is T {
+    return value !== null;
+}
+
+export function hoiseArrayNull<T>(arr: (T | null)[]): T[] | null {
+    if (arr.every(notNull)) {
+        return arr;
+    } else {
+        return null;
+    }
+}

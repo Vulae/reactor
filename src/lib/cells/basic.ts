@@ -9,8 +9,8 @@ import { TILESET } from '$lib/resources';
 
 export abstract class BasicFuelCell implements ComponentBase {
     public abstract initialDurability(): number;
-    public abstract readonly INITIAL_HEAT_GENERATION: number;
-    public abstract readonly INITIAL_POWER_GENERATION: number;
+    public abstract readonly INITIAL_HEAT_GENERATION: bigint;
+    public abstract readonly INITIAL_POWER_GENERATION: bigint;
 
     public abstract readonly TEXTURE: keyof typeof TILESET.textures;
 
@@ -50,7 +50,7 @@ export class UraniumFuelCell extends BasicFuelCell {
     public initialDurability(): number {
         return 20;
     }
-    public readonly INITIAL_HEAT_GENERATION: number = 1;
-    public readonly INITIAL_POWER_GENERATION: number = 1;
+    public readonly INITIAL_HEAT_GENERATION: bigint = 1n;
+    public readonly INITIAL_POWER_GENERATION: bigint = 1n;
     public readonly TEXTURE: keyof typeof TILESET.textures = 'uranium_cell_1';
 }

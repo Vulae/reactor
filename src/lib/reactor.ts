@@ -2,6 +2,7 @@ import type { Game } from './game';
 import { ExplodeParticle } from './particles';
 import { TILESET } from './resources';
 import { resize } from './util';
+import * as bigint from '$lib/bigintUtil';
 
 export const RENDER_SCALE: number = 48;
 
@@ -19,7 +20,7 @@ export type TickSteps<T> = {
 };
 
 export interface ComponentHeatable {
-    heat: number;
+    heat: bigint;
 }
 
 export interface ComponentBase {
@@ -52,19 +53,26 @@ export class Reactor {
 
     public readonly size: number = 10;
 
-    public heat: number = 50;
-    public maxHeat: number = 100;
+    public heat: bigint = 50n;
+    public maxHeat: bigint = 100n;
 
-    public power: number = 0;
-    public maxPower: number = 100;
+    public power: bigint = 0n;
+    public maxPower: bigint = 100n;
 
     private elements: (ComponentBase | null)[] = new Array(this.size * this.size).fill(null);
 
+    public contains(x: number, y: number): boolean {
+        if (!Number.isInteger(x) || !Number.isInteger(y)) return false;
+        return x >= 0 && x < this.size && y >= 0 && y < this.size;
+    }
+
     public getElement(x: number, y: number): ComponentBase | null {
+        if (!this.contains(x, y)) return null;
         return this.elements[x + y * this.size];
     }
 
-    public setElement(x: number, y: number, element: ComponentBase | null) {
+    public setElement(x: number, y: number, element: ComponentBase | null): void {
+        if (!this.contains(x, y)) return;
         const previous = this.getElement(x, y);
         if (previous) {
             previous.destroy?.(this, x, y);
@@ -89,15 +97,28 @@ export class Reactor {
             .filter((component) => component != null);
     }
 
-    public applyHeatPattern(x: number, y: number, pattern: [number, number][], heat: number): void {
+    public applyHeatPattern(x: number, y: number, pattern: [number, number][], heat: bigint): void {
         const components = this.getComponentsPattern(x, y, pattern);
         const heatable = components.filter((component) => component.isHeatable());
         if (heatable.length == 0) {
             this.heat += heat;
             return;
         }
-        const heatPerElement = heat / heatable.length;
-        heatable.forEach((component) => (component.heat += heatPerElement));
+        if (heatable.length == 1) {
+            heatable[0].heat += heat;
+            return;
+        }
+        if (heat < 1e6) {
+            const heatPerElement = Math.floor(Number(heat) / heatable.length);
+            const lastExtraHeat = Number(heat) % heatable.length;
+            for (let i = 0; i < heatable.length - 1; i++) {
+                heatable[i].heat += BigInt(heatPerElement);
+            }
+            heatable[heatable.length - 1].heat += BigInt(lastExtraHeat);
+        } else {
+            const heatPerElement = heat / BigInt(heatable.length);
+            heatable.forEach((component) => (component.heat += heatPerElement));
+        }
     }
 
     private canvas: HTMLCanvasElement | null = null;
@@ -215,14 +236,16 @@ export class Reactor {
             }
 
             if (state == 'dissipatePower') {
-                this.power = Math.min(this.power, this.maxPower);
+                if (this.power > this.maxPower) {
+                    this.power = this.maxPower;
+                }
             }
         }
 
         // Reactor heat dissipation
-        this.heat -= 1;
-        if (this.heat < 0) {
-            this.heat = 0;
+        this.heat -= 1n;
+        if (this.heat < 0n) {
+            this.heat = 0n;
         }
 
         // Reactor meltdown
@@ -231,7 +254,7 @@ export class Reactor {
                 for (let y = 0; y < this.size; y++) {
                     if (this.getElement(x, y)) {
                         this.explode(x, y);
-                        this.heat *= 1.1;
+                        this.heat = bigint.multiplyFloat(this.heat, 1.1);
                     }
                 }
             }

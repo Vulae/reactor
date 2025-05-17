@@ -1,5 +1,6 @@
 <script lang="ts">
     import Game from '$components/Game.svelte';
+    import { DEBUG } from '$lib/DEBUG';
 </script>
 
 <svelte:head>
@@ -8,9 +9,16 @@
 
 <svelte:body
     oncontextmenu={(ev) => {
-        // TODO: Make this disablable
+        if (
+            (ev.target as (EventTarget & HTMLElement) | null)?.classList.contains(
+                'allow-context-menu'
+            )
+        ) {
+            return;
+        }
+        // TODO: Make this a toggle in settings or something.
         ev.preventDefault();
     }}
 />
 
-<Game />
+<Game debug={DEBUG} />

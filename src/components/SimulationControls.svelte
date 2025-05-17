@@ -24,9 +24,9 @@
     function step() {
         if (fastTicksActive) {
             for (let i = 0; i < FAST_TICK_STEPS; i++) {
-                game.extraTicks -= 1;
-                if (game.extraTicks <= 0) {
-                    game.extraTicks = 0;
+                game.extraTicks -= 1n;
+                if (game.extraTicks <= 0n) {
+                    game.extraTicks = 0n;
                     fastTicksActive = false;
                     break;
                 }
@@ -106,7 +106,7 @@
                 class:button-active={fastTicksActive}
                 onclick={() => {
                     if (!running) return;
-                    if (game.extraTicks == 0) return;
+                    if (game.extraTicks == 0n) return;
                     fastTicksActive = !fastTicksActive;
                     intervalCaller?.setDelay(fastTicksActive ? FAST_TICK_RATE : game.tickRate);
                 }}

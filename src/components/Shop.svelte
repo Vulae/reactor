@@ -2,9 +2,9 @@
     import TextureAtlasImage from '$components/TextureAtlasImage.svelte';
     import Window from '$components/Window.svelte';
     import type { Game } from '$lib/game';
-    import { TILESET } from '$lib/resources';
-    import { formatBigNumber } from '$lib/util';
+    import { GAME_COMPONENTS, TILESET, type GameComponentInfo } from '$lib/resources';
     import { onDestroy, onMount } from 'svelte';
+    import * as bigint from '$lib/bigintUtil';
 
     let rerender: number = $state(0);
     let rerenderListener: number = -1;
@@ -13,11 +13,7 @@
 
     let tab: 'cells' | 'components' = $state('cells');
 
-    interface CellInfo {
-        texture: keyof typeof TILESET.textures;
-        description: string;
-    }
-    let cellInfo: CellInfo | null = $state(null);
+    let cellInfo: GameComponentInfo | null = $state(null);
 
     onMount(() => {
         rerenderListener = game.addEventListener('render', () => {
@@ -30,14 +26,14 @@
     });
 </script>
 
-{#snippet buyable(info: CellInfo)}
+{#snippet buyable(info: GameComponentInfo)}
     <button
         class="size-10 p-0"
         onmouseenter={() => {
             cellInfo = info;
         }}
         onmouseleave={() => {
-            if (JSON.stringify(cellInfo) == JSON.stringify(info)) {
+            if (cellInfo?.name == info.name) {
                 cellInfo = null;
             }
         }}
@@ -55,7 +51,7 @@
             </button>
         </div>
         <span class="w-24 text-3xl">
-            ${#key rerender}{formatBigNumber(game.money)}{/key}
+            ${#key rerender}{bigint.format(game.money)}{/key}
         </span>
     </div>
     <div class="mx-0.5 mt-1 h-[2px] bg-zinc-500"></div>
@@ -67,7 +63,7 @@
                     texture={cellInfo.texture}
                     class="aspect-square h-full"
                 />
-                <span class="leading-[0.8]">{cellInfo.description}</span>
+                <span class="leading-[0.8]">{cellInfo.description(game)}</span>
             {:else}
                 <h1 class="font-jersey text-4xl">CELLS</h1>
                 <span>Hover over a cell to view information.</span>
@@ -76,20 +72,9 @@
         <div class="mx-0.5 mb-1 h-[2px] bg-zinc-500"></div>
         <div class="flex-col">
             <div>
-                {@render buyable({
-                    texture: 'uranium_cell_1',
-                    description: 'x1 uranium cell produces energy and heat.'
-                })}
-                {@render buyable({
-                    texture: 'uranium_cell_1',
-                    description:
-                        'x2 uranium cell that produces x3 energy and heat of a regular uranium cell.'
-                })}
-                {@render buyable({
-                    texture: 'uranium_cell_1',
-                    description:
-                        'x4 uranium cell that produces x9 energy and heat of a regular uranium cell.'
-                })}
+                {@render buyable(GAME_COMPONENTS.uranium_cell_1)}
+                {@render buyable(GAME_COMPONENTS.uranium_cell_2)}
+                {@render buyable(GAME_COMPONENTS.uranium_cell_3)}
             </div>
         </div>
     {:else if tab == 'components'}

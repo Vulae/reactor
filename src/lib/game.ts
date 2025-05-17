@@ -12,9 +12,9 @@ export class Game extends EventDispatcher<{
         this.addEventListener('tick', () => this.tick());
     }
 
-    public money: number = 10000;
+    public money: bigint = 10000n;
     public tickRate: number = 1000;
-    public extraTicks: number = 1000000;
+    public extraTicks: bigint = 1000000n;
 
     public tick(): void {
         this.reactor.tick();
