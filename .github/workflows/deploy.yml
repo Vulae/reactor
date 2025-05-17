@@ -1,37 +1,36 @@
-name: "Deploy GitHub Pages"
+name: 'Deploy GitHub Pages'
 
 on:
-  push:
-    branches: [ main ]
+    push:
+        branches: [main]
+    workflow_dispatch:
 
 jobs:
-  build:
+    build:
+        runs-on: ubuntu-latest
 
-    runs-on: ubuntu-latest
+        steps:
+            - name: Perform Checkout
+              uses: actions/checkout@v3
 
-    steps:
+            - name: Use Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '22.x'
+                  cache: 'npm'
 
-      - name: Perform Checkout
-        uses: actions/checkout@v3
+            - name: Install
+              run: npm ci
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22.x'
-          cache: 'npm'
+            - name: Disable Debug Mode
+              run: 'echo "export const DEBUG: boolean = false;" > ./src/lib/DEBUG.ts'
 
-      - name: Install
-        run: npm ci
+            - name: Build
+              run: npm run build
 
-      - name: Disable Debug Mode
-        run: echo "export const DEBUG: boolean = false;" > ./src/lib/DEBUG.ts
-
-      - name: Build
-        run: npm run build
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
-          publish_branch: gh-pages
+            - name: Deploy
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./build
+                  publish_branch: gh-pages
