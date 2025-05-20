@@ -19,6 +19,9 @@ jobs:
                   node-version: '22.x'
                   cache: 'npm'
 
+            # I give up, I know this is very stupid.
+            # GitHub actions really doesn't like this script, so we just override it.
+            - run: 'echo "#\! /usr/bin/env bash" > ./nixos-patch-linker-of-binary-executables.sh'
             - name: Install
               run: npm ci
 
