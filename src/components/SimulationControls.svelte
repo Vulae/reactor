@@ -10,23 +10,23 @@
         game: Game;
     } = $props();
 
-    let ticker: number = $state(0);
+    let rerender: number = $state(0);
+    let rerenderListener: number = -1;
+
     let running: boolean = $state(true);
     let intervalCaller: IntervalCaller | null = null;
     let lastStepTime: number = -Infinity;
     let fastTicksActive: boolean = $state(false);
 
-    // const FAST_TICK_RATE: number = 25;
-    // const FAST_TICK_STEPS: number = 100;
-    const FAST_TICK_RATE: number = 50;
-    const FAST_TICK_STEPS: number = 1;
+    const FAST_TICK_RATE: number = 25;
+    const FAST_TICK_STEPS: number = 10;
 
     function step() {
         if (fastTicksActive) {
             for (let i = 0; i < FAST_TICK_STEPS; i++) {
-                game.extraTicks -= 1n;
+                game.extraTicks -= 1;
                 if (game.extraTicks <= 0n) {
-                    game.extraTicks = 0n;
+                    game.extraTicks = 0;
                     fastTicksActive = false;
                     break;
                 }
@@ -34,57 +34,59 @@
             }
         } else {
             game?.dispatchEvent('tick', null);
-            if (game?.tickRate != intervalCaller?.getDelay()) {
-                intervalCaller?.setDelay(game.tickRate);
+            if (game?.tickRate() != intervalCaller?.getDelay()) {
+                intervalCaller?.setDelay(game.tickRate());
             }
         }
         game?.dispatchEvent('render', null);
-        ticker += 1;
+        rerender += 1;
     }
 
     onMount(() => {
         intervalCaller = new IntervalCaller(step);
-        intervalCaller.setDelay(game.tickRate);
+        intervalCaller.setDelay(game.tickRate());
         intervalCaller.start();
+
+        rerenderListener = game.addEventListener('render', () => {
+            rerender++;
+        }).id;
     });
 
     onDestroy(() => {
         intervalCaller?.stop();
         intervalCaller = null;
+        game.removeEventListener(rerenderListener);
     });
 </script>
 
 <Window title="Simulation Controls" titleDark={true} gradientStart="yellow" gradientEnd="white">
     <div class="flex w-56 justify-between">
         <div class="flex items-center gap-1">
-            {#if running}
-                <button
-                    class="size-6 p-0"
-                    onclick={() => {
+            <button
+                class="button size-6"
+                onclick={() => {
+                    if (running) {
                         running = false;
                         fastTicksActive = false;
                         intervalCaller?.stop();
-                    }}
-                >
-                    <img class="size-full" src="./button-pause.png" alt="Pause" draggable="false" />
-                </button>
-            {:else}
-                <button
-                    class="size-6 p-0"
-                    onclick={() => {
+                    } else {
                         running = true;
                         intervalCaller?.start();
-                    }}
-                >
+                    }
+                }}
+            >
+                {#if running}
+                    <img class="size-full" src="./button-pause.png" alt="Pause" draggable="false" />
+                {:else}
                     <img class="size-full" src="./button-play.png" alt="Play" draggable="false" />
-                </button>
-            {/if}
+                {/if}
+            </button>
             <button
-                class="size-6 p-0 disabled:cursor-not-allowed"
+                class="button size-6 disabled:cursor-not-allowed"
                 disabled={running}
                 onclick={() => {
                     if (running) return;
-                    if (Date.now() - lastStepTime < game.tickRate) return;
+                    if (Date.now() - lastStepTime < game.tickRate()) return;
                     lastStepTime = Date.now();
                     step();
                 }}
@@ -93,22 +95,22 @@
             </button>
         </div>
         <div class="flex items-center gap-1">
-            <span class="text-3xl">
-                {#key ticker}
+            <span class="font-jersey text-3xl">
+                {#key rerender}
                     {new Intl.NumberFormat('en-us', {
                         maximumFractionDigits: 0
                     }).format(game.extraTicks)}
                 {/key}
             </span>
             <button
-                class="size-6 p-0 disabled:cursor-not-allowed"
-                disabled={!running}
+                class="button size-6 disabled:cursor-not-allowed"
+                disabled={!rerender || !running || game.extraTicks <= 0}
                 class:button-active={fastTicksActive}
                 onclick={() => {
                     if (!running) return;
-                    if (game.extraTicks == 0n) return;
+                    if (game.extraTicks == 0) return;
                     fastTicksActive = !fastTicksActive;
-                    intervalCaller?.setDelay(fastTicksActive ? FAST_TICK_RATE : game.tickRate);
+                    intervalCaller?.setDelay(fastTicksActive ? FAST_TICK_RATE : game.tickRate());
                 }}
             >
                 <img

@@ -11,7 +11,8 @@
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         "format": "prettier --write .",
-        "lint": "prettier --check . && eslint ."
+        "lint": "prettier --check . && eslint .",
+        "postinstall": "sh ./nixos-patch-linker-of-binary-executables.sh"
     },
     "devDependencies": {
         "@eslint/compat": "^1.2.5",
@@ -19,14 +20,18 @@
         "@sveltejs/adapter-static": "^3.0.8",
         "@sveltejs/kit": "^2.16.0",
         "@sveltejs/vite-plugin-svelte": "^5.0.0",
+        "@tailwindcss/postcss": "^4.1.7",
         "@tailwindcss/vite": "^4.0.0",
+        "autoprefixer": "^10.4.21",
         "eslint": "^9.18.0",
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-svelte": "^3.0.0",
         "globals": "^16.0.0",
+        "postcss-import": "^16.1.0",
         "prettier": "^3.4.2",
         "prettier-plugin-svelte": "^3.3.3",
         "prettier-plugin-tailwindcss": "^0.6.11",
+        "sass-embedded": "^1.89.0",
         "svelte": "^5.0.0",
         "svelte-check": "^4.0.0",
         "tailwindcss": "^4.0.0",

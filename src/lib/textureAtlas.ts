@@ -74,7 +74,7 @@ function rebuildAtlas<
         const textureNodes = hoiseArrayNull(
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             Object.entries(textures).map(([texture, [_x, _y, w, h]]) =>
-                root.insert(texture, w + (pad ? 2 : 0), h + (pad ? 2 : 0))
+                root.insert(texture, w + (pad ? 1 : 0), h + (pad ? 1 : 0))
             )
         );
 
@@ -98,26 +98,21 @@ function rebuildAtlas<
                 const [originalX, originalY, originalWidth, originalHeight] = textures[node.value];
 
                 if (
-                    node.width - (pad ? 2 : 0) != originalWidth ||
-                    node.height - (pad ? 2 : 0) != originalHeight
+                    node.width - (pad ? 1 : 0) != originalWidth ||
+                    node.height - (pad ? 1 : 0) != originalHeight
                 ) {
                     throw new Error('MY SANITY CHECK');
                 }
 
                 rebuiltCtx.putImageData(
                     originalCtx.getImageData(originalX, originalY, originalWidth, originalHeight),
-                    node.x + (pad ? 1 : 0),
-                    node.y + (pad ? 1 : 0)
+                    node.x,
+                    node.y
                 );
 
                 return [
                     node.value,
-                    [
-                        node.x + (pad ? 1 : 0),
-                        node.y + (pad ? 1 : 0),
-                        node.width - (pad ? 2 : 0),
-                        node.height - (pad ? 2 : 0)
-                    ]
+                    [node.x, node.y, node.width - (pad ? 1 : 0), node.height - (pad ? 1 : 0)]
                 ];
             })
         ) as Textures;

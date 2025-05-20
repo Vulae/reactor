@@ -4,9 +4,9 @@
     import Shop from '$components/Shop.svelte';
     import Reactor from './Reactor.svelte';
     import SimulationControls from './SimulationControls.svelte';
-    import { UraniumFuelCell } from '$lib/cells/basic';
-    import Window from './Window.svelte';
-    import { TILESET } from '$lib/resources';
+    import { GAME_COMPONENTS } from '$lib/resources';
+    import DebugTilesetAtlas from '$components/debug/TilesetAtlas.svelte';
+    import DebugCheats from '$components/debug/Cheats.svelte';
 
     let {
         debug = false
@@ -19,33 +19,27 @@
     let body: HTMLBodyElement;
     let canDrag: boolean = $state(false);
     let dragActive: boolean = $state(false);
-    let bgX: number = $state(0);
-    let bgY: number = $state(0);
-
-    let debugTilesetBlob: string | null = $state(null);
+    // FIXME: Dragging isn't 1:1 with how the mouse moves, it seems very slightly behind.
+    let positionX: number = $state(0);
+    let positionY: number = $state(0);
 
     onMount(() => {
         game = new Game();
 
         for (let x = 0; x < 10; x++) {
-            game.reactor.setElement(x, 1, new UraniumFuelCell(game.reactor));
-        }
-        console.log(game);
-
-        if (debug) {
-            TILESET.debugGetRebuiltBlob().then((blob) => {
-                debugTilesetBlob = URL.createObjectURL(blob);
-            });
+            for (let y = 0; y < 10; y++) {
+                game.reactor.setComponent(
+                    x,
+                    y,
+                    GAME_COMPONENTS.uranium_cell_1.create(game.reactor)
+                );
+            }
         }
     });
 
     onDestroy(() => {
         game?.destroy();
         game = null;
-
-        if (debugTilesetBlob) {
-            URL.revokeObjectURL(debugTilesetBlob);
-        }
     });
 </script>
 
@@ -55,9 +49,13 @@
         if (!canDrag) {
             return;
         }
-        if (ev.button == 0 && ev.buttons == 1) {
-            dragActive = true;
+        dragActive = !!(ev.buttons & 1);
+    }}
+    onmouseup={(ev) => {
+        if (!canDrag) {
+            return;
         }
+        dragActive = !!(ev.buttons & 1);
     }}
     onmousemove={(ev) => {
         if ((ev.target as (EventTarget & HTMLElement) | null)?.classList.contains('bg-drag')) {
@@ -66,12 +64,9 @@
             canDrag = false;
         }
         if (dragActive) {
-            bgX += ev.movementX;
-            bgY += ev.movementY;
+            positionX += ev.movementX;
+            positionY += ev.movementY;
         }
-    }}
-    onmouseup={() => {
-        dragActive = false;
     }}
     onmouseleave={() => {
         dragActive = false;
@@ -81,10 +76,10 @@
 <div
     class="bg-drag absolute h-screen w-screen"
     style:background="url(./background.png)"
-    style:background-position="{bgX}px {bgY}px"
+    style:background-position="{positionX}px {positionY}px"
     style:cursor={canDrag ? (dragActive ? 'move' : 'pointer') : null}
 >
-    <div class="bg-drag h-max w-max" style:translate="{bgX}px {bgY}px">
+    <div class="bg-drag absolute h-max w-max" style:left="{positionX}px" style:top="{positionY}px">
         {#if game}
             <div class="bg-drag flex flex-col gap-1">
                 <div class="bg-drag flex">
@@ -98,15 +93,8 @@
                 </div>
                 {#if debug}
                     <div class="bg-drag flex gap-1">
-                        {#if debugTilesetBlob}
-                            <Window title={'DEBUG: Tilset atlas image'} gradientStart="black">
-                                <img
-                                    class="allow-context-menu"
-                                    src={debugTilesetBlob}
-                                    alt="Debug tileset atlas"
-                                />
-                            </Window>
-                        {/if}
+                        <DebugTilesetAtlas />
+                        <DebugCheats {game} />
                     </div>
                 {/if}
             </div>

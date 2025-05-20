@@ -1,3 +1,5 @@
+export const VERYBIG: bigint = 10n ** 1_000n;
+
 const BIGINT_PRECISION: bigint = 1_000_000n;
 const BIGINT_PRECISION_N: number = Number(BIGINT_PRECISION);
 

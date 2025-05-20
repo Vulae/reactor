@@ -1,5 +1,7 @@
 Unnamed W.I.P. idle game
 
+### >>> [PLAY](https://vulae.github.io/reactor) <<<
+
 ### [Inspiration](#inspiration)
 
 - [DodecaDragons](https://demonin.com/games/dodecaDragons/)

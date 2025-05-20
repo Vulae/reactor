@@ -20,7 +20,7 @@
     } = $props();
 </script>
 
-<div class="window flex flex-col {_class} gap-1 p-1">
+<div class="shadow-outline-up flex flex-col bg-zinc-300 {_class} gap-1 p-1">
     <div
         class="flex items-center justify-between"
         style:background="linear-gradient(90deg, {gradientStart} 0%, {gradientEnd} 100%)"

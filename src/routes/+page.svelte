@@ -9,6 +9,7 @@
 
 <svelte:body
     oncontextmenu={(ev) => {
+        // BUG: For some reason oncontextmenu event WILL NOT trigger on a disabled button????
         if (
             (ev.target as (EventTarget & HTMLElement) | null)?.classList.contains(
                 'allow-context-menu'

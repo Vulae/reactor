@@ -14,6 +14,39 @@
 
     let renderFrameCaller: RenderFrameCaller | null = null;
 
+    function mouseAction(ev: MouseEvent): void {
+        if (!reactor.cursor) return;
+        const left = !!(ev.buttons & 1);
+        const right = !!(ev.buttons & 2);
+        if (left == true && right == true) return;
+        if (left == true) {
+            if (
+                reactor.game.selectedComponent &&
+                reactor.getComponent(reactor.cursor.x, reactor.cursor.y) == null &&
+                reactor.heat < reactor.maxHeat
+            ) {
+                const cost = reactor.game.selectedComponent.cost(reactor.game);
+                if (reactor.game.money >= cost) {
+                    reactor.game.money -= cost;
+                    reactor.setComponent(
+                        reactor.cursor.x,
+                        reactor.cursor.y,
+                        reactor.game.selectedComponent.create(reactor)
+                    );
+                    reactor.game.dispatchEvent('render', null);
+                }
+            }
+        }
+        if (right == true) {
+            const component = reactor.getComponent(reactor.cursor.x, reactor.cursor.y);
+            if (component) {
+                reactor.game.money += component.sellAmount(reactor);
+                reactor.setComponent(reactor.cursor.x, reactor.cursor.y, null);
+                reactor.game.dispatchEvent('render', null);
+            }
+        }
+    }
+
     let {
         reactor
     }: {
@@ -67,20 +100,20 @@
                 {#key rerender}
                     <progress
                         class="reactor-power-progress"
-                        value={bigint.percentage(reactor.power, reactor.maxPower)}
+                        value={bigint.percentage(reactor.power, reactor.maxPower())}
                     ></progress>
                     <div class="flex items-center justify-between px-2">
                         <span class="text-white">
                             POWER
-                            {bigint.format(reactor.power)}/{bigint.format(reactor.maxPower)}
+                            {bigint.format(reactor.power)}/{bigint.format(reactor.maxPower())}
                         </span>
                         <span class="text-white">SELL</span>
                     </div>
                 {/key}
                 <!-- svelte-ignore a11y_consider_explicit_label -->
                 <button
-                    class="bg-transparent shadow-none"
-                    onclick={(ev) => {
+                    class="cursor-pointer"
+                    onclick={() => {
                         reactor.game.money += reactor.power;
                         reactor.power = 0n;
                         reactor.game.dispatchEvent('render', null);
@@ -88,34 +121,54 @@
                 ></button>
             </div>
         </div>
-        <div class="force-overlap">
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+            class="force-overlap relative"
+            onmousedown={(ev) => {
+                mouseAction(ev);
+            }}
+            onmouseup={(ev) => {
+                mouseAction(ev);
+            }}
+            onmousemove={(ev) => {
+                if (!canvas) return;
+                reactor.cursor = {
+                    x: Math.floor((ev.offsetX / canvas.clientWidth) * reactor.size),
+                    y: Math.floor((ev.offsetY / canvas.clientHeight) * reactor.size)
+                };
+                mouseAction(ev);
+            }}
+            onmouseleave={() => {
+                reactor.cursor = null;
+            }}
+        >
             <canvas bind:this={canvas} oncontextmenu={(ev) => ev.preventDefault()}></canvas>
             <canvas
                 bind:this={animationCanvas}
                 oncontextmenu={(ev) => ev.preventDefault()}
-                class="h-full w-full"
+                class="absolute size-full cursor-pointer"
             >
             </canvas>
         </div>
     </div>
 </Window>
 
-<style>
+<style lang="scss">
     .reactor-heat-progress,
     .reactor-heat-progress::-webkit-progress-bar {
-        background-image: url(./progress-heat-inactive.png);
+        background-image: url(/reactor/progress-heat-inactive.png);
     }
     .reactor-heat-progress::-webkit-progress-value,
     .reactor-heat-progress::-moz-progress-bar {
-        background-image: url(./progress-heat-active.png);
+        background-image: url(/reactor/progress-heat-active.png);
     }
 
     .reactor-power-progress,
     .reactor-power-progress::-webkit-progress-bar {
-        background-image: url(./progress-power-inactive.png);
+        background-image: url(/reactor/progress-power-inactive.png);
     }
     .reactor-power-progress::-webkit-progress-value,
     .reactor-power-progress::-moz-progress-bar {
-        background-image: url(./progress-power-active.png);
+        background-image: url(/reactor/progress-power-active.png);
     }
 </style>
