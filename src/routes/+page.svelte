@@ -1,6 +1,11 @@
 <script lang="ts">
     import Game from '$components/Game.svelte';
     import { DEBUG } from '$lib/DEBUG';
+
+    function isDebugMode(): boolean {
+        if (DEBUG) return true;
+        return new URL(location.href).searchParams.has('debug');
+    }
 </script>
 
 <svelte:head>
@@ -22,4 +27,4 @@
     }}
 />
 
-<Game debug={DEBUG} />
+<Game debug={isDebugMode()} />
