@@ -5,6 +5,7 @@
     import { TILESET } from '$lib/resources';
     import { RenderFrameCaller } from '$lib/util';
     import * as bigint from '$lib/bigintUtil';
+    import { ComponentType } from '$lib/components/base';
 
     let rerender: number = $state(0);
     let rerenderListener: number = -1;
@@ -20,10 +21,11 @@
         const right = !!(ev.buttons & 2);
         if (left == true && right == true) return;
         if (left == true) {
+            const componentInPlace = reactor.getComponent(reactor.cursor.x, reactor.cursor.y);
             if (
                 reactor.game.selectedComponent &&
-                reactor.getComponent(reactor.cursor.x, reactor.cursor.y) == null &&
-                reactor.heat < reactor.maxHeat
+                (componentInPlace == null || componentInPlace.type == ComponentType.SpentCell) &&
+                reactor.heat <= reactor.maxHeat
             ) {
                 const cost = reactor.game.selectedComponent.cost(reactor.game);
                 if (reactor.game.money >= cost) {

@@ -2,6 +2,7 @@ import { TILESET, type GameComponentInfo } from '$lib/resources';
 import * as bigint from '$lib/bigintUtil';
 import {
     ComponentBase,
+    ComponentType,
     type ComponentHeatable,
     type ComponentPowerbank,
     type TickSteps
@@ -9,6 +10,11 @@ import {
 import type { Reactor } from '$lib/reactor';
 
 export class BasicCapacitor extends ComponentBase implements ComponentHeatable, ComponentPowerbank {
+    public readonly type: ComponentType = ComponentType.Capacitor;
+    public get tier(): number {
+        return this.info.tier;
+    }
+
     public readonly info: GameComponentInfo;
 
     private readonly baseMaxHeat: bigint;
@@ -19,9 +25,8 @@ export class BasicCapacitor extends ComponentBase implements ComponentHeatable, 
     public heat: bigint = 0n;
 
     private readonly basePowerCapacity: bigint;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public powerCapacity(_reactor: Reactor): bigint {
-        return this.basePowerCapacity;
+    public powerCapacity(reactor: Reactor): bigint {
+        return this.basePowerCapacity * BigInt(reactor.upgrades.capacitorMaxPower + 1);
     }
 
     public readonly texture: keyof typeof TILESET.textures;

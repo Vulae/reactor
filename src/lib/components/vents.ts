@@ -1,9 +1,14 @@
 import { TILESET, type GameComponentInfo } from '$lib/resources';
 import * as bigint from '$lib/bigintUtil';
-import { ComponentBase, type ComponentHeatable, type TickSteps } from './base';
+import { ComponentBase, ComponentType, type ComponentHeatable, type TickSteps } from './base';
 import type { Reactor } from '$lib/reactor';
 
 export class BasicVent extends ComponentBase implements ComponentHeatable {
+    public readonly type: ComponentType = ComponentType.Capacitor;
+    public get tier(): number {
+        return this.info.tier;
+    }
+
     public readonly info: GameComponentInfo;
 
     private readonly baseMaxHeat: bigint;

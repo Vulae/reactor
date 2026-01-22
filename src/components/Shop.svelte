@@ -30,9 +30,8 @@
 {#snippet buyable(info: GameComponentInfo)}
     <button
         class="button size-10 p-0.5"
-        disabled={!rerender || game?.selectedComponent?.name == info.name}
+        disabled={!rerender || game.selectedComponent?.name == info.name}
         onclick={() => {
-            if (!game) return;
             game.selectedComponent = info;
             game.dispatchEvent('render', null);
         }}
@@ -50,26 +49,17 @@
 {/snippet}
 
 <Window title="Shop" gradientStart="blue" gradientEnd="lightblue" class="w-64 {_class}">
-    <div class="flex items-center justify-between gap-2">
-        <div>
-            <button
-                onclick={() => (tab = 'cells')}
-                disabled={tab == 'cells'}
-                class="button px-2 py-1"
-            >
-                Cells
-            </button>
-            <button
-                onclick={() => (tab = 'components')}
-                disabled={tab == 'components'}
-                class="button px-2 py-1"
-            >
-                Components
-            </button>
-        </div>
-        <span class="font-jersey w-28 text-3xl">
-            ${#key rerender}{bigint.format(game.money)}{/key}
-        </span>
+    <div class="flex gap-2">
+        <button onclick={() => (tab = 'cells')} disabled={tab == 'cells'} class="button px-2 py-1">
+            Cells
+        </button>
+        <button
+            onclick={() => (tab = 'components')}
+            disabled={tab == 'components'}
+            class="button px-2 py-1"
+        >
+            Components
+        </button>
     </div>
     <div class="mx-0.5 mt-1 h-[2px] bg-zinc-500"></div>
     {#if tab == 'cells'}

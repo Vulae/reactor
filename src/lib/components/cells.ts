@@ -1,14 +1,26 @@
 import { PATTERN_X, type Reactor } from '$lib/reactor';
 import { TILESET, type GameComponentInfo } from '$lib/resources';
-import { ComponentBase, type TickSteps } from './base';
+import { ComponentBase, ComponentType, type TickSteps } from './base';
+
+export enum BasicCellType {
+    Uranium
+}
 
 export class BasicFuelCell extends ComponentBase {
+    public readonly type: ComponentType = ComponentType.Cell;
+    public get tier(): number {
+        return this.info.tier;
+    }
+
     public readonly info: GameComponentInfo;
+    public readonly basicCellType: BasicCellType;
 
     private readonly baseDurability: number;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public maxDurability(reactor: Reactor): number {
-        return this.baseDurability;
+        return (
+            this.baseDurability *
+            (reactor.upgrades.basicCellUpgrades[this.basicCellType].durability + 1)
+        );
     }
     public durability: number;
 
@@ -19,31 +31,32 @@ export class BasicFuelCell extends ComponentBase {
     }
 
     private readonly basePowerGeneration: bigint;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public powerGeneration(_reactor: Reactor): bigint {
-        return this.basePowerGeneration;
+    public powerGeneration(reactor: Reactor): bigint {
+        return (
+            this.basePowerGeneration *
+            BigInt(reactor.upgrades.basicCellUpgrades[this.basicCellType].powerGeneration + 1)
+        );
     }
 
     public readonly texture: keyof typeof TILESET.textures;
-    private readonly shouldAutoplace: (reactor: Reactor) => boolean;
 
     public constructor(
         info: GameComponentInfo,
+        basicCellType: BasicCellType,
         reactor: Reactor,
         baseDurability: number,
         baseHeatGeneration: bigint,
         basePowerGeneration: bigint,
-        texture: keyof typeof TILESET.textures,
-        shouldAutoPlace: (reactor: Reactor) => boolean
+        texture: keyof typeof TILESET.textures
     ) {
         super();
         this.info = info;
+        this.basicCellType = basicCellType;
         this.baseDurability = baseDurability;
         this.baseHeatGeneration = baseHeatGeneration;
         this.basePowerGeneration = basePowerGeneration;
         this.texture = texture;
         this.durability = this.maxDurability(reactor);
-        this.shouldAutoplace = shouldAutoPlace;
     }
 
     public render(ctx: CanvasRenderingContext2D, reactor: Reactor): void {
@@ -65,27 +78,30 @@ export class BasicFuelCell extends ComponentBase {
                 reactor.setComponent(
                     x,
                     y,
-                    new BasicCellGhost(this.info, this.texture, this.shouldAutoplace)
+                    new BasicCellSpent(this.info, this.basicCellType, this.texture)
                 );
             }
         }
     };
 }
 
-export class BasicCellGhost extends ComponentBase {
+export class BasicCellSpent extends ComponentBase {
+    public readonly type: ComponentType = ComponentType.SpentCell;
+    public readonly tier: number = 0;
+
     public readonly info: GameComponentInfo;
+    public readonly basicCellType: BasicCellType;
     public readonly texture: keyof typeof TILESET.textures;
-    private readonly shouldAutoplace: (reactor: Reactor) => boolean;
 
     public constructor(
         info: GameComponentInfo,
-        texture: keyof typeof TILESET.textures,
-        shouldAutoplace: (reactor: Reactor) => boolean
+        type: BasicCellType,
+        texture: keyof typeof TILESET.textures
     ) {
         super();
         this.info = info;
+        this.basicCellType = type;
         this.texture = texture;
-        this.shouldAutoplace = shouldAutoplace;
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -95,7 +111,7 @@ export class BasicCellGhost extends ComponentBase {
 
     public readonly tickSteps: TickSteps<this> = {
         autoPlace(reactor, x, y) {
-            if (this.shouldAutoplace(reactor)) {
+            if (reactor.upgrades.basicCellUpgrades[this.basicCellType].autoPlace) {
                 const cost = this.info.cost(reactor.game);
                 if (reactor.game.money >= cost) {
                     reactor.game.money -= cost;

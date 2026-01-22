@@ -1,9 +1,9 @@
-import type { ComponentBase } from './components/base';
+import { ComponentType, type ComponentBase } from './components/base';
 import { BasicCapacitor } from './components/capacitors';
-import { BasicFuelCell } from './components/cells';
+import { BasicCellType, BasicFuelCell } from './components/cells';
 import { BasicVent } from './components/vents';
 import type { Game } from './game';
-import type { Reactor } from './reactor';
+import { type Reactor } from './reactor';
 import { TextureAtlas, TextureAtlasAnimation } from './textureAtlas';
 
 export const TILESET = new TextureAtlas('./tileset.png', {
@@ -13,6 +13,10 @@ export const TILESET = new TextureAtlas('./tileset.png', {
     cursor_empty: [0, 288, 32, 32],
     cursor_selectable: [0, 320, 32, 32],
     cursor_unselectable: [0, 352, 32, 32],
+
+    upgrade_icon_lightning: [32, 288, 32, 32],
+    upgrade_icon_clock: [32, 320, 32, 32],
+    upgrade_icon_infinity: [32, 352, 32, 32],
 
     floor: [0, 64, 32, 32],
     big_tile: [0, 224, 64, 64],
@@ -60,6 +64,8 @@ export const EXPLOSION = new TextureAtlasAnimation(TILESET, [
 
 export interface GameComponentInfo {
     readonly name: string;
+    readonly type: ComponentType;
+    readonly tier: number;
     description(game: Game): string;
     readonly texture: keyof typeof TILESET.textures;
     cost(game: Game): bigint;
@@ -74,6 +80,8 @@ function componentInfoTypeHint<T extends GameComponentInfo>(callbackfn: (compone
 export const GAME_COMPONENTS = {
     capacitor_1: componentInfoTypeHint((info) => ({
         name: 'Basic Capacitor',
+        type: ComponentType.Capacitor,
+        tier: 1,
         description() {
             return 'Basic capacitor increases the total power storage of the reactor.';
         },
@@ -87,6 +95,8 @@ export const GAME_COMPONENTS = {
     })),
     vent_1: componentInfoTypeHint((info) => ({
         name: 'Basic Vent',
+        type: ComponentType.Vent,
+        tier: 1,
         description() {
             return 'Basic vent reduces the heat of itself every tick.';
         },
@@ -100,6 +110,8 @@ export const GAME_COMPONENTS = {
     })),
     uranium_cell_1: componentInfoTypeHint((info) => ({
         name: 'Single Uranium Cell',
+        type: ComponentType.Cell,
+        tier: 1,
         description() {
             return 'Singular uranium cell produces energy and heat every tick.';
         },
@@ -110,18 +122,19 @@ export const GAME_COMPONENTS = {
         create(reactor): ComponentBase {
             return new BasicFuelCell(
                 info,
+                BasicCellType.Uranium,
                 reactor,
                 10,
                 1n,
                 1n,
-                'uranium_cell_1',
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                (_reactor) => true
+                'uranium_cell_1'
             );
         }
     })),
     uranium_cell_2: componentInfoTypeHint((info) => ({
         name: 'Double Uranium Cell',
+        type: ComponentType.Cell,
+        tier: 1,
         description() {
             return 'Double uranium cell produces x3 energy and heat of a singular uranium cell.';
         },
@@ -132,17 +145,19 @@ export const GAME_COMPONENTS = {
         create(reactor): ComponentBase {
             return new BasicFuelCell(
                 info,
+                BasicCellType.Uranium,
                 reactor,
                 10,
                 3n,
                 3n,
-                'uranium_cell_2', // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                (_reactor) => true
+                'uranium_cell_2'
             );
         }
     })),
     uranium_cell_3: componentInfoTypeHint((info) => ({
         name: 'Quad Uranium Cell',
+        type: ComponentType.Cell,
+        tier: 1,
         description() {
             return 'Quad uranium cell produces x9 energy and heat of a singular uranium cell.';
         },
@@ -153,13 +168,102 @@ export const GAME_COMPONENTS = {
         create(reactor): ComponentBase {
             return new BasicFuelCell(
                 info,
+                BasicCellType.Uranium,
                 reactor,
                 10,
                 9n,
                 9n,
-                'uranium_cell_3', // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                (_reactor) => true
+                'uranium_cell_3'
             );
         }
     }))
+} as const;
+
+export interface ReactorUpgradeInfo {
+    readonly name: string;
+    description(reactor: Reactor): string;
+    readonly textures: (keyof typeof TILESET.textures)[];
+    cost(reactor: Reactor): bigint | null;
+    buy(reactor: Reactor): void;
+}
+
+function upgradeInfoTypeHint(info: ReactorUpgradeInfo): ReactorUpgradeInfo {
+    return info;
+}
+
+export const REACTOR_UPGRADES = {
+    capacitor_max_power: upgradeInfoTypeHint({
+        name: 'Bigger Capacitors',
+        description() {
+            return 'Increases the amount of power each capacitor can hold.';
+        },
+        textures: ['capacitor_1', 'upgrade_icon_lightning'],
+        cost(reactor) {
+            return 20n * BigInt(1 + reactor.upgrades.capacitorMaxPower);
+        },
+        buy(reactor) {
+            reactor.upgrades.capacitorMaxPower++;
+        }
+    }),
+    auto_sell: upgradeInfoTypeHint({
+        name: 'Auto Power Sell',
+        description() {
+            return 'Automatically sell power in the reactor.';
+        },
+        textures: ['missing_texture', 'upgrade_icon_lightning'],
+        cost(reactor) {
+            return 20n * BigInt(1 + reactor.upgrades.reactorAutoPowerSell);
+        },
+        buy(reactor) {
+            reactor.upgrades.reactorAutoPowerSell++;
+        }
+    }),
+    uranium_power: upgradeInfoTypeHint({
+        name: 'Uranium Power Generation',
+        description() {
+            return 'Increases the amount of power uranium cells generate every tick.';
+        },
+        textures: ['uranium_cell_1', 'upgrade_icon_lightning'],
+        cost(reactor) {
+            return (
+                20n *
+                BigInt(
+                    1 + reactor.upgrades.basicCellUpgrades[BasicCellType.Uranium].powerGeneration
+                )
+            );
+        },
+        buy(reactor) {
+            reactor.upgrades.basicCellUpgrades[BasicCellType.Uranium].powerGeneration++;
+        }
+    }),
+    uranium_durability: upgradeInfoTypeHint({
+        name: 'Uranium Extra Durability',
+        description() {
+            return 'Increases durability of uranium cells.';
+        },
+        textures: ['uranium_cell_1', 'upgrade_icon_clock'],
+        cost(reactor) {
+            return (
+                20n *
+                BigInt(1 + reactor.upgrades.basicCellUpgrades[BasicCellType.Uranium].durability)
+            );
+        },
+        buy(reactor) {
+            reactor.upgrades.basicCellUpgrades[BasicCellType.Uranium].durability++;
+        }
+    }),
+    uranium_auto_place: upgradeInfoTypeHint({
+        name: 'Uranium Auto Replace',
+        description() {
+            return 'Automatically replace uranium cells when they run out of fuel.';
+        },
+        textures: ['uranium_cell_1', 'upgrade_icon_infinity'],
+        cost(reactor) {
+            if (reactor.upgrades.basicCellUpgrades[BasicCellType.Uranium].autoPlace) return null;
+            return 100n;
+        },
+        buy(reactor) {
+            reactor.upgrades.basicCellUpgrades[BasicCellType.Uranium].autoPlace = true;
+        }
+    })
 } as const;

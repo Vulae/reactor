@@ -2,6 +2,7 @@
     import { onDestroy, onMount } from 'svelte';
     import type { TextureAtlas } from '$lib/textureAtlas';
 
+    // TODO: Texture typehint if possible.
     let {
         atlas,
         texture,

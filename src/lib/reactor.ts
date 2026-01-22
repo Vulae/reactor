@@ -3,7 +3,8 @@ import { ExplodeParticle } from './particles';
 import { TILESET } from './resources';
 import { resize } from './util';
 import * as bigint from '$lib/bigintUtil';
-import type { ComponentBase } from './components/base';
+import { ComponentType, type ComponentBase } from './components/base';
+import { BasicCellType } from './components/cells';
 
 export const RENDER_SCALE: number = 48;
 
@@ -48,9 +49,23 @@ export class ReactorUpgrades {
         return this.reactor.game;
     }
 
-    public uraniumAutoPlace: boolean = false;
-    public uraniumPowerGeneration: number = 0;
-    public uraniumDurability: number = 0;
+    public readonly basicCellUpgrades: {
+        [key in BasicCellType]: {
+            autoPlace: boolean;
+            powerGeneration: number;
+            durability: number;
+        };
+    } = {
+        [BasicCellType.Uranium]: {
+            autoPlace: false,
+            powerGeneration: 0,
+            durability: 0
+        }
+    };
+
+    public capacitorMaxPower: number = 0;
+
+    public reactorAutoPowerSell: number = 0;
 }
 
 export class Reactor {
@@ -292,16 +307,29 @@ export class Reactor {
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
                     const component = this.getComponent(x, y);
-                    component?.tickSteps?.[state]?.call(component, this, x, y);
+                    component?.tickSteps[state]?.call(component, this, x, y);
                 }
             }
 
             if (state == 'dissipatePower') {
-                if (this.power > this.maxPower()) {
-                    this.power = this.maxPower();
+                const maxPower = this.maxPower();
+
+                const powerSellAmountPercentage = this.upgrades.reactorAutoPowerSell * 0.01;
+                const autoSellMaxAmount = bigint.multiplyFloat(maxPower, powerSellAmountPercentage);
+
+                const autoSellAmount = bigint.min(this.power, autoSellMaxAmount);
+                this.power -= autoSellAmount;
+                this.game.money += autoSellAmount;
+
+                if (this.power > maxPower) {
+                    this.power = maxPower;
                 }
             }
         });
+
+        if (this.power > this.maxPower()) {
+            throw new Error('Sanity check');
+        }
 
         // Reactor heat dissipation
         this.heat -= 1n;
@@ -313,10 +341,12 @@ export class Reactor {
         if (this.heat > this.maxHeat) {
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
-                    if (this.getComponent(x, y)) {
+                    const component = this.getComponent(x, y);
+                    if (component && component.type != ComponentType.SpentCell) {
                         this.explode(x, y);
                         this.heat = bigint.multiplyFloat(this.heat, 1.1);
                     }
+                    this.setComponent(x, y, null);
                 }
             }
 

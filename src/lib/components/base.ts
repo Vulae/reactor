@@ -12,7 +12,17 @@ export type TickSteps<T> = {
     [key in keyof typeof TickStep]?: (this: T, reactor: Reactor, x: number, y: number) => void;
 };
 
+export enum ComponentType {
+    Cell,
+    SpentCell,
+    Vent,
+    Capacitor
+}
+
 export abstract class ComponentBase {
+    public abstract readonly type: ComponentType;
+    public abstract readonly tier: number;
+
     public isHeatable(): this is ComponentHeatable {
         return false;
     }

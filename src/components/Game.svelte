@@ -7,6 +7,8 @@
     import { GAME_COMPONENTS } from '$lib/resources';
     import DebugTilesetAtlas from '$components/debug/TilesetAtlas.svelte';
     import DebugCheats from '$components/debug/Cheats.svelte';
+    import Upgrades from './ReactorUpgrades.svelte';
+    import Info from './Info.svelte';
 
     let {
         debug = false
@@ -19,20 +21,21 @@
     let body: HTMLBodyElement;
     let canDrag: boolean = $state(false);
     let dragActive: boolean = $state(false);
-    // FIXME: Dragging isn't 1:1 with how the mouse moves, it seems very slightly behind.
     let positionX: number = $state(0);
     let positionY: number = $state(0);
 
     onMount(() => {
         game = new Game();
 
-        for (let x = 0; x < 10; x++) {
-            for (let y = 0; y < 10; y++) {
-                game.reactor.setComponent(
-                    x,
-                    y,
-                    GAME_COMPONENTS.uranium_cell_1.create(game.reactor)
-                );
+        if (debug) {
+            for (let x = 0; x < 10; x++) {
+                for (let y = 0; y < 10; y++) {
+                    game.reactor.setComponent(
+                        x,
+                        y,
+                        GAME_COMPONENTS.uranium_cell_1.create(game.reactor)
+                    );
+                }
             }
         }
     });
@@ -79,13 +82,21 @@
     style:background-position="{positionX}px {positionY}px"
     style:cursor={canDrag ? (dragActive ? 'move' : 'pointer') : null}
 >
-    <div class="bg-drag absolute h-max w-max" style:left="{positionX}px" style:top="{positionY}px">
+    <div
+        class="bg-drag absolute h-max w-max"
+        style:left="{positionX}px"
+        style:top="{positionY}px"
+        style:pointer-events={dragActive ? 'none' : ''}
+    >
         {#if game}
             <div class="bg-drag flex flex-col gap-1">
                 <div class="bg-drag flex">
                     <SimulationControls {game} />
                 </div>
                 <div class="bg-drag flex gap-1">
+                    <div class="bg-drag">
+                        <Upgrades reactor={game.reactor} />
+                    </div>
                     <Reactor reactor={game.reactor} />
                     <div class="bg-drag">
                         <Shop {game} />
@@ -100,4 +111,10 @@
             </div>
         {/if}
     </div>
+</div>
+
+<div class="pointer-events-none absolute flex h-screen w-screen items-start justify-end p-1">
+    {#if game}
+        <Info {game} class="pointer-events-auto" />
+    {/if}
 </div>

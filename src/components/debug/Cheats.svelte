@@ -67,5 +67,14 @@
                 />
             {/if}
         </div>
+        <div>
+            <button
+                class="button px-2 py-1"
+                onclick={() => {
+                    console.log(game);
+                    alert('Game object has been logged to developer console.');
+                }}>Print Game</button
+            >
+        </div>
     </div>
 </Window>
