@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 let ID_NUM = 0;
 function getId(): number {
     return ID_NUM++;

@@ -1,0 +1,108 @@
+@use 'sass:meta';
+
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Micro+5&display=swap');
+
+@layer base, tailwind, tail;
+
+@layer tailwind {
+    @include meta.load-css('tailwindcss/preflight');
+    @include meta.load-css('tailwindcss/theme');
+    @include meta.load-css('tailwindcss/utilities');
+}
+
+@theme ___ {
+    --font-jersey: 'Jersey 10', sans-serif;
+    --font-micro: 'Micro 5', sans-serif;
+
+    --shadow-outline-up:
+        inset -1px -1px var(--color-zinc-900), inset 1px 1px var(--color-zinc-200),
+        inset -2px -2px var(--color-zinc-500), inset 2px 2px var(--color-white);
+    --shadow-outline-down:
+        inset 1px 1px var(--color-zinc-900), inset -1px -1px var(--color-zinc-200),
+        inset 2px 2px var(--color-zinc-500), inset -2px -2px var(--color-white);
+}
+
+@layer base {
+    * {
+        --tw-leading: 0.9;
+        line-height: var(--tw-leading);
+        text-rendering: geometricPrecision;
+        font-kerning: none;
+    }
+}
+
+@layer tail {
+    body {
+        @apply min-h-screen min-w-screen overflow-hidden bg-black;
+
+        font-family: var(--font-micro);
+        font-size: var(--text-lg);
+        color: var(--color-black);
+        --tw-leading: 0.9;
+        line-height: var(--tw-leading);
+        text-rendering: geometricPrecision;
+        font-kerning: none;
+        user-select: none;
+        image-rendering: pixelated;
+    }
+
+    .force-overlap {
+        display: grid;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        grid-template-rows: repeat(1, minmax(0, 1fr));
+        & > * {
+            grid-column-start: 1;
+            grid-column-end: 1;
+            grid-row-start: 1;
+            grid-row-end: 1;
+        }
+    }
+
+    .button {
+        @apply shadow-outline-up cursor-pointer bg-zinc-300;
+        &:hover:not(:disabled) {
+            @apply bg-zinc-200;
+        }
+        &:active {
+            @apply cursor-grabbing;
+        }
+        &:disabled {
+            @apply cursor-not-allowed;
+        }
+        &:active,
+        &:disabled,
+        &.button-active {
+            @apply shadow-outline-down;
+        }
+    }
+
+    .arrow-hide {
+        -moz-appearance: textfield;
+        appearance: textfield;
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            display: none;
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    }
+
+    .checkbox {
+        @apply relative size-[0.8em] cursor-pointer appearance-none;
+
+        &::before {
+            content: '';
+            @apply shadow-outline-down absolute block size-[0.8em] bg-white;
+        }
+        &:checked::after {
+            content: 'X';
+            @apply absolute size-[0.8em] text-center align-middle;
+            @apply left-0.25; // Doesn't wanna align (˶˃⤙˂˶)
+        }
+    }
+
+    a {
+        @apply text-purple-600 visited:text-purple-800 hover:underline;
+    }
+}

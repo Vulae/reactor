@@ -11,11 +11,13 @@ function toImageData(image: HTMLImageElement): ImageData | null {
     return ctx.getImageData(0, 0, image.naturalWidth, image.naturalHeight);
 }
 
-function rebuildAtlas<
-    Textures extends {
-        [key: string]: [number, number, number, number];
-    }
->(imageData: ImageData, textures: Textures, pad: boolean = true): [ImageData, Textures] {
+type TextureAtlasObj<T extends string> = { [_ in T]: [number, number, number, number] };
+
+function rebuildAtlas<Textures extends string>(
+    imageData: ImageData,
+    textures: TextureAtlasObj<Textures>,
+    pad: boolean = true
+): [ImageData, TextureAtlasObj<Textures>] {
     /** https://blackpawn.com/texts/lightmaps/ */
     class PackerNode {
         public readonly x: number;
@@ -23,7 +25,7 @@ function rebuildAtlas<
         public readonly width: number;
         public readonly height: number;
 
-        public value: null | [PackerNode, PackerNode] | keyof Textures = null;
+        public value: null | [PackerNode, PackerNode] | Textures = null;
 
         public constructor(x: number, y: number, width: number, height: number) {
             this.x = x;
@@ -32,7 +34,7 @@ function rebuildAtlas<
             this.height = height;
         }
 
-        public insert(texture: keyof Textures, width: number, height: number): PackerNode | null {
+        public insert(texture: Textures, width: number, height: number): PackerNode | null {
             if (Array.isArray(this.value)) {
                 return (
                     this.value[0].insert(texture, width, height) ??
@@ -72,10 +74,10 @@ function rebuildAtlas<
         const root = new PackerNode(0, 0, size, size);
 
         const textureNodes = hoiseArrayNull(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            Object.entries(textures).map(([texture, [_x, _y, w, h]]) =>
-                root.insert(texture, w + (pad ? 1 : 0), h + (pad ? 1 : 0))
-            )
+            Object.entries(textures).map((v) => {
+                const [texture, [_x, _y, w, h]] = v as [Textures, [number, number, number, number]];
+                return root.insert(texture, w + (pad ? 1 : 0), h + (pad ? 1 : 0));
+            })
         );
 
         if (!textureNodes) {
@@ -83,7 +85,9 @@ function rebuildAtlas<
         }
 
         const originalCanvas = new OffscreenCanvas(imageData.width, imageData.height);
-        const originalCtx = originalCanvas.getContext('2d')!;
+        const originalCtx = originalCanvas.getContext('2d', {
+            willReadFrequently: true
+        })!;
         originalCtx.putImageData(imageData, 0, 0);
 
         const rebuiltCanvas = new OffscreenCanvas(root.width, root.height);
@@ -115,7 +119,7 @@ function rebuildAtlas<
                     [node.x, node.y, node.width - (pad ? 1 : 0), node.height - (pad ? 1 : 0)]
                 ];
             })
-        ) as Textures;
+        ) as TextureAtlasObj<Textures>;
 
         return [rebuiltCtx.getImageData(root.x, root.y, root.width, root.height), packedTextures];
     }
@@ -124,19 +128,15 @@ function rebuildAtlas<
     return [imageData, textures];
 }
 
-export class TextureAtlas<
-    Textures extends {
-        [key: string]: [number, number, number, number];
-    }
-> {
+export class TextureAtlas<Textures extends string> {
     private rebuilt: OffscreenCanvas | null = null;
-    private rebuiltTextures: Textures | null = null;
+    private rebuiltTextures: TextureAtlasObj<Textures> | null = null;
 
     private image: HTMLImageElement;
 
-    public readonly textures: Textures;
+    public readonly textures: TextureAtlasObj<Textures>;
 
-    public constructor(image: HTMLImageElement | string, textures: Textures) {
+    public constructor(image: HTMLImageElement | string, textures: TextureAtlasObj<Textures>) {
         if (typeof image == 'string') {
             this.image = new Image();
             this.image.src = image;
@@ -164,7 +164,7 @@ export class TextureAtlas<
 
     public draw(
         ctx: CanvasRenderingContext2D,
-        texture: keyof Textures,
+        texture: Textures,
         x: number = 0,
         y: number = 0,
         w: number = 1,
@@ -208,7 +208,7 @@ export class TextureAtlas<
         return await this.rebuilt!.convertToBlob({ type: 'image/png' });
     }
 
-    private async blob(texture: keyof Textures): Promise<Blob> {
+    private async blob(texture: Textures): Promise<Blob> {
         const [sx, sy, sw, sh] = this.rebuiltTextures![texture];
         const canvas = new OffscreenCanvas(sw, sh);
         const ctx = canvas.getContext('2d')!;
@@ -216,18 +216,13 @@ export class TextureAtlas<
         return await canvas.convertToBlob({ type: 'image/png' });
     }
 
-    public async getTextureImageBlob(texture: keyof Textures): Promise<Blob> {
+    public async getTextureImageBlob(texture: Textures): Promise<Blob> {
         await this.awaitLoad();
         return await this.blob(texture);
     }
 }
 
-export class TextureAtlasAnimation<
-    Textures extends {
-        [key: string]: [number, number, number, number];
-    },
-    Frames extends (keyof Textures)[]
-> {
+export class TextureAtlasAnimation<Textures extends string, Frames extends Textures[]> {
     public readonly atlas: TextureAtlas<Textures>;
     public readonly frames: Frames;
     public drawOutOfBounds: boolean;
