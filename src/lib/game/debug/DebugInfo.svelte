@@ -1,11 +1,12 @@
 <script lang="ts">
     import type { Game } from '../resource/game';
-    import { FrameInfo, TickInfo } from '../resource/info';
+    import { FrameInfo } from '../resource/info';
+    import { TickManager } from '../resource/tickManager';
     import { saveGameRaw } from '../save';
 
     let { game }: { game: Game } = $props();
     let frameInfo = $derived(game.world.getResource(FrameInfo));
-    let tickInfo = $derived(game.world.getResource(TickInfo));
+    let tickManager = $derived(game.world.getResource(TickManager));
 
     let frame: number = $state(0);
     let frameListener: number = -1;
@@ -35,14 +36,19 @@
             }}>Log Save Game</button
         ><br />
         {#key frame}
-            {@const worldInfo = game.world.diagnosticInfo()}
-            Frame: {frameInfo.numFrames}<br />
+            Frame: {frameInfo.numFrames}
+            <br />
             RenderTime: {Math.floor(
                 (frameInfo.lastRenderTimeEnd - frameInfo.lastRenderTimeStart) * 10
-            ) / 10}ms<br />
-            Entities: {worldInfo.numEntities} ({worldInfo.numComponents})
+            ) / 10}ms
             <br />
-            Tick: {tickInfo.numTicks}<br />
+            Entities: {game.world.entities.size} ({game.world.entities
+                .values()
+                .reduce((count, entity) => count + entity.size, 0)})
+            <br />
+            Resources: {game.world.resources.size}
+            <br />
+            Tick: {tickManager.numTicks}
         {/key}
     </span>
 </div>

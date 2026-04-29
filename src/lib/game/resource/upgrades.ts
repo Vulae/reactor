@@ -4,7 +4,6 @@ export class Upgrades {
     public readonly basicGenerator: {
         [_ in TileBasicGeneratorType]: {
             powerGeneration: number;
-            powerHeatGeneration: number;
             durability: number;
             autoReplace: boolean;
         };
@@ -13,7 +12,6 @@ export class Upgrades {
             v,
             {
                 powerGeneration: 0,
-                powerHeatGeneration: 0,
                 durability: 0,
                 autoReplace: false
             }
@@ -21,42 +19,73 @@ export class Upgrades {
     ) as any;
 
     public getBasicGeneratorCost(type: TileBasicGeneratorType, tier: 0 | 1 | 2): number {
-        const mul = [1, 2.5, 6][tier];
+        return (
+            {
+                [TileBasicGeneratorType.Uranium]: 10,
+                [TileBasicGeneratorType.Plutonium]: 10
+            }[type] *
+            (tier + 1) ** 2
+        );
+    }
+
+    public getBasicGeneratorUpgradeCost(type: TileBasicGeneratorType): {
+        powerGeneration: number;
+        durability: number;
+        autoReplace: number;
+    } {
         switch (type) {
             case TileBasicGeneratorType.Uranium:
-                return 10 * mul;
+                return {
+                    powerGeneration:
+                        (this.basicGenerator[TileBasicGeneratorType.Uranium].powerGeneration + 1) **
+                        10,
+                    durability:
+                        (this.basicGenerator[TileBasicGeneratorType.Uranium].durability + 1) ** 10,
+                    autoReplace: 10000
+                };
             case TileBasicGeneratorType.Plutonium:
-                return 6000 * mul;
+                return {
+                    powerGeneration:
+                        (this.basicGenerator[TileBasicGeneratorType.Plutonium].powerGeneration +
+                            1) **
+                        10,
+                    durability:
+                        (this.basicGenerator[TileBasicGeneratorType.Plutonium].durability + 1) **
+                        10,
+                    autoReplace: 10000000
+                };
         }
     }
 
     public getBasicGeneratorDurability(type: TileBasicGeneratorType): number {
-        switch (type) {
-            case TileBasicGeneratorType.Uranium:
-                return 20;
-            case TileBasicGeneratorType.Plutonium:
-                return 100;
-        }
+        return (
+            {
+                [TileBasicGeneratorType.Uranium]: 20,
+                [TileBasicGeneratorType.Plutonium]: 100
+            }[type] *
+            2 ** (this.basicGenerator[type].durability + 1)
+        );
     }
 
     public getBasicGeneratorHeatGeneration(type: TileBasicGeneratorType, tier: 0 | 1 | 2): number {
-        const mul = [1, 8, 36][tier];
-        switch (type) {
-            case TileBasicGeneratorType.Uranium:
-                return 1 * mul;
-            case TileBasicGeneratorType.Plutonium:
-                return 150 * mul;
-        }
+        return (
+            {
+                [TileBasicGeneratorType.Uranium]: 1,
+                [TileBasicGeneratorType.Plutonium]: 150
+            }[type] *
+            (tier + 1) ** 3
+        );
     }
 
     public getBasicGeneratorPowerGeneration(type: TileBasicGeneratorType, tier: 0 | 1 | 2): number {
-        const mul = [1, 4, 12][tier];
-        switch (type) {
-            case TileBasicGeneratorType.Uranium:
-                return 1 * mul;
-            case TileBasicGeneratorType.Plutonium:
-                return 150 * mul;
-        }
+        return (
+            {
+                [TileBasicGeneratorType.Uranium]: 1,
+                [TileBasicGeneratorType.Plutonium]: 150
+            }[type] *
+            (tier + 1) ** 2 *
+            (this.basicGenerator[type].powerGeneration + 1)
+        );
     }
 
     public readonly basicVent: {

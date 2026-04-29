@@ -1,9 +1,11 @@
 <script lang="ts">
     import type { Game } from '../resource/game.ts';
     import { Reactor } from '../resource/reactor.ts';
+    import { TickManager } from '../resource/tickManager.ts';
 
     let { game }: { game: Game } = $props();
     let reactor = $derived(game.world.getResource(Reactor));
+    let tickManager = $derived(game.world.getResource(TickManager));
 </script>
 
 <div class="flex flex-col">
@@ -12,7 +14,7 @@
             class="button px-2"
             onclick={() => {
                 reactor.money = Infinity;
-                game.dispatchEvent('tickRender', null);
+                game.setTickRerender();
                 game.dispatchEvent('announceMessage', {
                     type: 'debug',
                     message: 'Gave infinite money'
@@ -24,8 +26,8 @@
         <button
             class="button px-2"
             onclick={() => {
-                reactor.extraTicks = Infinity;
-                game.dispatchEvent('tickRender', null);
+                tickManager.extraTicks = Infinity;
+                game.setTickRerender();
                 game.dispatchEvent('announceMessage', {
                     type: 'debug',
                     message: 'Gave infinite extra ticks'
@@ -38,8 +40,7 @@
             class="button px-2"
             onclick={() => {
                 game.world.queryEntities([]).forEach((entity) => entity.destroy());
-                game.dispatchEvent('tickRender', null);
-                game.dispatchEvent('render', null);
+                game.setTickRerender();
                 game.dispatchEvent('announceMessage', {
                     type: 'debug',
                     message: 'Cleared entities'

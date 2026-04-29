@@ -1,18 +1,40 @@
 import { System, type Component, type Entity, type World } from '$lib/ecs';
 import { TileDurability, TileOverwrite, TilePos } from '../component/tile/base/def';
 import { ATLAS } from '../textures';
+import { ComponentPlacer } from './componentPlacer';
 import { Game } from './game';
 import { Reactor } from './reactor';
 
 export class GameCursor {
-    public pos: TilePos | null = null;
-    public click: 'none' | 'primary' | 'secondary' = 'none';
-    public placer: {
-        readonly costMoney: number;
-        readonly texture: keyof (typeof ATLAS)['textures'];
-        readonly overwriteType?: string;
-        readonly create: (game: Game) => Component[];
-    } | null = null;
+    private changed: boolean = false;
+
+    private _click: 'none' | 'primary' | 'secondary' = 'none';
+    public set click(click: 'none' | 'primary' | 'secondary') {
+        this._click = click;
+        this.changed = true;
+    }
+    public get click(): 'none' | 'primary' | 'secondary' {
+        return this._click;
+    }
+
+    private lastPos: TilePos | null = null;
+    private _pos: TilePos | null = null;
+    public set pos(pos: TilePos | null) {
+        if (pos == null) {
+            this.lastPos = null;
+            this._pos = null;
+            this.changed = false;
+            return;
+        }
+        this.lastPos = this.pos;
+        this._pos = pos;
+        if (this.lastPos == null || !pos.eq(this.lastPos)) {
+            this.changed = true;
+        }
+    }
+    public get pos(): TilePos | null {
+        return this._pos;
+    }
 
     public getTile(world: World): Entity<[TilePos]> | null {
         if (!this.pos) {
@@ -58,8 +80,8 @@ export class GameCursor {
     }
 
     public static readonly SYSTEM_RENDER = new System(
-        [Game, CanvasRenderingContext2D, GameCursor, Reactor],
-        (game, ctx, cursor, reactor) => {
+        [Game, CanvasRenderingContext2D, GameCursor, ComponentPlacer, Reactor],
+        (game, ctx, cursor, placer, reactor) => {
             // TODO: Clean this up, its ugly
             const tile = cursor.getTile(game.world);
             if (tile) {
@@ -70,30 +92,33 @@ export class GameCursor {
                 ctx.restore();
                 if (cursor.click == 'secondary') {
                     tile.destroy();
-                    game.dispatchEvent('tickRender', null);
+                    game.setTickRerender();
                 }
-            } else if (cursor.pos && cursor.placer) {
+            } else if (cursor.pos && placer.selected) {
                 ctx.save();
                 ctx.translate(cursor.pos.x, cursor.pos.y);
                 ctx.globalAlpha = 0.5;
-                ATLAS.draw(ctx, cursor.placer.texture);
+                ATLAS.draw(ctx, ComponentPlacer.COMPONENTS[placer.selected].info(game).texture);
                 ctx.restore();
             }
-            if (cursor.pos && cursor.placer && cursor.click == 'primary') {
-                if (reactor.money >= cursor.placer.costMoney) {
+            if (cursor.changed && cursor.pos && placer.selected && cursor.click == 'primary') {
+                const selectedPlacer = ComponentPlacer.COMPONENTS[placer.selected];
+                const selectedPlacerInfo = selectedPlacer.info(game);
+                if (reactor.money >= selectedPlacerInfo.cost) {
                     if (
                         cursor.placeTile(
                             game,
                             cursor.pos,
-                            cursor.placer.create(game),
-                            cursor.placer.overwriteType
+                            selectedPlacer.place(game),
+                            selectedPlacerInfo.overwriteType
                         )
                     ) {
-                        reactor.money -= cursor.placer.costMoney;
-                        game.dispatchEvent('tickRender', null);
+                        reactor.money -= selectedPlacerInfo.cost;
+                        game.setTickRerender();
                     }
                 }
             }
+            cursor.changed = false;
         }
     );
 }

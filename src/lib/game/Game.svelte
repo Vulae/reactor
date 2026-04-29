@@ -13,6 +13,8 @@
     import Info from './Info.svelte';
     import ComponentsShop from './ComponentsShop.svelte';
     import { Game } from './resource/game';
+    import UpgradesShop from './UpgradesShop.svelte';
+    import Options from './Options.svelte';
 
     let { dev = $bindable(false) }: { dev?: boolean } = $props();
 
@@ -115,6 +117,9 @@
                     <Window title="Components" gradientStart="darkorange" gradientEnd="orange">
                         <ComponentsShop {game} />
                     </Window>
+                    <Window title="Upgrades" gradientStart="darkviolet" gradientEnd="magenta">
+                        <UpgradesShop {game} />
+                    </Window>
                 </div>
                 {#if dev}
                     <div class="bg-drag flex gap-1">
@@ -161,23 +166,7 @@
                 collapsable="removed"
                 collapsed={true}
             >
-                <!-- <details>
-                    <summary class="cursor-pointer pl-1">Language</summary>
-                    <div class="shadow-outline-down flex flex-col p-1">
-                        <label class="flex items-center gap-1">
-                            <input
-                                class="checkbox"
-                                type="radio"
-                                checked
-                                id="language-select"
-                            />en_US
-                        </label>
-                    </div>
-                </details> -->
-                <label class="flex cursor-pointer items-center gap-1">
-                    <input class="checkbox" type="checkbox" bind:checked={dev} />
-                    Development Mode
-                </label>
+                <Options bind:dev bind:game />
             </Window>
         </div>
         <div class="pointer-events-auto">
@@ -185,7 +174,7 @@
                 title="Save"
                 gradientStart="blue"
                 gradientEnd="lightblue"
-                collapsable="removed"
+                collapsable="hidden"
                 collapsed={true}
             >
                 <SaveLoad bind:game />

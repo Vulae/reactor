@@ -3,13 +3,13 @@
     import ImgButtonPause from '$lib/assets/button-pause.png';
     import ImgButtonStep from '$lib/assets/button-step.png';
     import ImgButtonFastForward from '$lib/assets/button-fast-forward.png';
-    import { Reactor } from './resource/reactor';
     import { IntervalCaller } from '$lib/util';
     import { onMount } from 'svelte';
     import type { Game } from './resource/game';
+    import { TickManager } from './resource/tickManager';
 
     let { game }: { game: Game } = $props();
-    let reactor = $derived(game.world.getResource(Reactor));
+    let tickManager = $derived(game.world.getResource(TickManager));
 
     let rerender = $state(1);
     let tickListener: number = -1;
@@ -25,9 +25,9 @@
         if (!running) return;
         if (fastTicksActive) {
             for (let i = 0; i < FAST_TICK_STEPS; i++) {
-                reactor.extraTicks--;
-                if (reactor.extraTicks <= 0) {
-                    reactor.extraTicks = 0;
+                tickManager.extraTicks--;
+                if (tickManager.extraTicks <= 0) {
+                    tickManager.extraTicks = 0;
                     fastTicksActive = false;
                     break;
                 }
@@ -35,14 +35,14 @@
             }
         } else {
             game.tick();
-            if (reactor.millisecondsPerTick != intervalCaller.getDelay()) {
-                intervalCaller.setDelay(reactor.millisecondsPerTick);
+            if (tickManager.millisecondsPerTick != intervalCaller.getDelay()) {
+                intervalCaller.setDelay(tickManager.millisecondsPerTick);
             }
         }
     });
 
     onMount(() => {
-        intervalCaller.setDelay(reactor.millisecondsPerTick);
+        intervalCaller.setDelay(tickManager.millisecondsPerTick);
         intervalCaller.start();
         return () => {
             intervalCaller.stop();
@@ -86,7 +86,7 @@
             onclick={() => {
                 if (running) return;
                 const now = performance.now();
-                if (now - lastStepTickTime < reactor.millisecondsPerTick) return;
+                if (now - lastStepTickTime < tickManager.millisecondsPerTick) return;
                 lastStepTickTime = now;
                 game.tick();
             }}
@@ -97,19 +97,19 @@
     <div class="flex items-center gap-1">
         <span class="font-jersey">
             {#key rerender}
-                {reactor.extraTicks}
+                {tickManager.extraTicks}
             {/key}
         </span>
         <button
             class="button size-6 disabled:cursor-not-allowed"
-            disabled={!rerender || !running || reactor.extraTicks <= 0}
+            disabled={!rerender || !running || tickManager.extraTicks <= 0}
             class:button-active={fastTicksActive}
             onclick={() => {
                 if (!running) return;
-                if (reactor.extraTicks == 0) return;
+                if (tickManager.extraTicks == 0) return;
                 fastTicksActive = !fastTicksActive;
                 intervalCaller.setDelay(
-                    fastTicksActive ? FAST_TICK_RATE : reactor.millisecondsPerTick
+                    fastTicksActive ? FAST_TICK_RATE : tickManager.millisecondsPerTick
                 );
             }}
         >

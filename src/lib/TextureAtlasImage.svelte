@@ -10,19 +10,8 @@
         atlas: TextureAtlas<K>;
         texture: K;
     } = $props();
-
-    let url: string | null = $state(null);
-
-    $effect(() => {
-        atlas.getTextureImageBlob(texture).then((blob) => (url = URL.createObjectURL(blob)));
-        return () => {
-            if (url) {
-                URL.revokeObjectURL(url);
-            }
-        };
-    });
 </script>
 
-{#if url}
+{#await atlas.getTextureImageAsBlobURL(texture) then url}
     <img src={url} alt={texture} class={_class} draggable="false" />
-{/if}
+{/await}

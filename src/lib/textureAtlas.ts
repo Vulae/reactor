@@ -216,9 +216,33 @@ export class TextureAtlas<Textures extends string> {
         return await canvas.convertToBlob({ type: 'image/png' });
     }
 
-    public async getTextureImageBlob(texture: Textures): Promise<Blob> {
+    private readonly blobCache: Map<Textures, string> = new Map();
+
+    public clearBlobCache(): void {
+        for (const [_, url] of this.blobCache) {
+            URL.revokeObjectURL(url);
+        }
+        this.blobCache.clear();
+    }
+
+    public async getTextureImageAsBlobURL(texture: Textures): Promise<string> {
+        {
+            const cached = this.blobCache.get(texture);
+            if (cached !== undefined) {
+                return cached;
+            }
+        }
         await this.awaitLoad();
-        return await this.blob(texture);
+        const blob = await this.blob(texture);
+        {
+            const cached = this.blobCache.get(texture);
+            if (cached !== undefined) {
+                return cached;
+            }
+        }
+        const url = URL.createObjectURL(blob);
+        this.blobCache.set(texture, url);
+        return url;
     }
 }
 

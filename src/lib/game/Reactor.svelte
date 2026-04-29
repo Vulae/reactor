@@ -5,6 +5,7 @@
     import type { Game } from './resource/game';
     import { GameCursor } from './resource/cursor';
     import { TilePos } from './component/tile/base/def';
+    import ReactorCanvas from './ReactorCanvas.svelte';
 
     let { game }: { game: Game } = $props();
     let reactor = $derived(game.world.getResource(Reactor));
@@ -54,7 +55,7 @@
     });
 </script>
 
-<div class="flex flex-col gap-1">
+<div class="flex w-min flex-col gap-1">
     <div class="grid grid-cols-2 gap-2">
         <div class="force-overlap">
             {#key tick}
@@ -75,7 +76,7 @@
                     if (reactor.heat < 0) {
                         reactor.heat = 0;
                     }
-                    game.dispatchEvent('tickRender', null);
+                    game.setTickRerender();
                 }}
             ></button>
         </div>
@@ -95,40 +96,12 @@
                 class="cursor-pointer"
                 onclick={() => {
                     reactor.sellPower();
-                    game.dispatchEvent('tickRender', null);
+                    game.setTickRerender();
                 }}
             ></button>
         </div>
     </div>
-    <canvas
-        bind:this={canvas}
-        onpointermove={(ev) => {
-            if ((ev.buttons & 0b11) == 0) {
-                cursor.click = 'none';
-            }
-            if (!canvas) return;
-            const tileX = Math.floor((ev.offsetX / canvas.offsetWidth) * reactor.width);
-            const tileY = Math.floor((ev.offsetY / canvas.offsetHeight) * reactor.height);
-            cursor.pos = new TilePos(tileX, tileY);
-            game.dispatchEvent('tickRender', null);
-        }}
-        onpointerleave={() => {
-            cursor.pos = null;
-            game.dispatchEvent('tickRender', null);
-        }}
-        onpointerdown={(ev) => {
-            if (ev.button == 0) {
-                cursor.click = 'primary';
-            } else if (ev.button == 2) {
-                cursor.click = 'secondary';
-            }
-        }}
-        onpointerup={(ev) => {
-            if (ev.button == 0 || ev.button == 2) {
-                cursor.click = 'none';
-            }
-        }}
-    ></canvas>
+    <ReactorCanvas {game} />
 </div>
 
 <style lang="scss">

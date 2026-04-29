@@ -55,7 +55,7 @@
             {@render children()}
         </div>
     {:else if collapsable == 'hidden'}
-        <div style={collapsable == 'hidden' && collapsed ? 'display: hidden' : ''}>
+        <div style:display={collapsed ? 'none' : ''}>
             {@render children()}
         </div>
     {:else if collapsable == 'removed'}

@@ -11,9 +11,6 @@ export class Reactor {
         return pos.x >= 0 && pos.y >= 0 && pos.x < this.width && pos.y < this.height;
     }
 
-    public extraTicks: number = 0;
-    public millisecondsPerTick: number = 1000;
-
     public heat: number = 0;
     public maxHeat: number = 100;
     public power: number = 0;

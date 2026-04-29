@@ -10,6 +10,10 @@ export class TilePos {
         this.y = y;
     }
 
+    public eq(other: TilePos): boolean {
+        return this.x == other.x && this.y == other.y;
+    }
+
     public distance(other: TilePos): number {
         return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
     }

@@ -16,13 +16,6 @@ export class Dt {
     });
 }
 
-export class TickInfo {
-    public numTicks: number = 0;
-    public static readonly SYSTEM = new System([TickInfo], (info) => {
-        info.numTicks++;
-    });
-}
-
 export class FrameInfo {
     public numFrames: number = 0;
 

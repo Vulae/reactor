@@ -45,6 +45,9 @@ export const SYSTEM_TICK_BASIC_HEATVENT = new System(
             const [vent, heatable] = entity.components;
             heatable.maxHeat = vent.getMaxHeat(upgrades);
             heatable.heat -= vent.getHeatVentAmount(upgrades);
+            if (heatable.heat < 0) {
+                heatable.heat = 0;
+            }
         }
     }
 );

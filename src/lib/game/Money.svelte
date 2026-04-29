@@ -31,7 +31,7 @@
         <button
             onclick={() => {
                 reactor.money++;
-                game.dispatchEvent('tickRender', null);
+                game.setTickRerender();
             }}
             class="button px-2">Scrounge for $1</button
         >

@@ -21,6 +21,10 @@
         mouseX = ev.clientX;
         mouseY = ev.clientY;
     }}
+    onmouseover={(ev) => {
+        mouseX = ev.clientX;
+        mouseY = ev.clientY;
+    }}
 />
 
 <div class="pointer-events-none fixed z-50 p-2" style:left="{mouseX}px" style:top="{mouseY}px">

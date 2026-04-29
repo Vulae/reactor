@@ -11,12 +11,12 @@ import {
     TilePos
 } from './component/tile/base/def';
 import { Game } from './resource/game';
-import { TickInfo } from './resource/info';
 import { Reactor } from './resource/reactor';
 
 import { deflateSync, inflateSync } from 'fflate';
 import { Base64 } from 'js-base64';
 import { Upgrades } from './resource/upgrades';
+import { TickManager } from './resource/tickManager';
 
 type Constr = new (...args: any) => any;
 type ConstrNew<C extends Constr> = C extends new (...args: any) => infer R ? R : never;
@@ -66,13 +66,34 @@ function extract<T extends { [key: string]: any }, K extends { [key: string]: an
 }
 
 const SAVERS = [
-    ClassSaver.basic('TickInfo', TickInfo, () => new TickInfo(), ['numTicks']),
+    (() => {
+        const KEYS: (keyof TickManager)[] = [
+            'numTicks',
+            'millisecondsPerTick',
+            'extraTicks',
+            'dateSinceLastTick'
+        ];
+        return new ClassSaver(
+            'TickManager',
+            TickManager,
+            (v) => {
+                const s: { [key: string]: any } = extract({}, v, KEYS);
+                s['extraTicks'] = v.extraTicks == Infinity ? 'INFINITY' : v.extraTicks;
+                return s;
+            },
+            (v) => {
+                const s: TickManager = extract(new TickManager(), v as any, KEYS);
+                if ((s.extraTicks as any) == 'INFINITY') {
+                    s.extraTicks = Infinity;
+                }
+                return s;
+            }
+        );
+    })(),
     (() => {
         const KEYS: (keyof Reactor)[] = [
             'width',
             'height',
-            'extraTicks',
-            'millisecondsPerTick',
             'heat',
             'maxHeat',
             'power',
@@ -84,15 +105,11 @@ const SAVERS = [
             Reactor,
             (v) => {
                 const s: { [key: string]: any } = extract({}, v, KEYS);
-                s['extraTicks'] = v.extraTicks == Infinity ? 'INFINITY' : v.extraTicks;
                 s['money'] = v.money == Infinity ? 'INFINITY' : v.money;
                 return s;
             },
             (v) => {
                 const s: Reactor = extract(new Reactor(), v as any, KEYS);
-                if ((s.extraTicks as any) == 'INFINITY') {
-                    s.extraTicks = Infinity;
-                }
                 if ((s.money as any) == 'INFINITY') {
                     s.money = Infinity;
                 }
@@ -194,6 +211,7 @@ export function loadGameRaw(v: any): Game {
         }
         game.world.addEntity(loadedComponents);
     }
+    game.saveDate = new Date(v.saveDate);
     return game;
 }
 

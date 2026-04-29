@@ -17,7 +17,59 @@ export type ComponentsAsComponentConstructors<T extends Component[]> = {
     [K in keyof T]: ComponentConstructor<T[K]>;
 };
 
-export class Entity<T extends Component[]> {
+const SAFETY_DISALLOWED_CONSTRUCTORS: Function[] = [
+    Boolean,
+    Number,
+    String,
+    BigInt,
+    Array,
+    Object,
+    Symbol,
+    Function
+    // TODO: Figure out how to do generator functions.
+];
+
+function safetyCheckComponentConstructors(
+    constructors: ComponentConstructor[],
+    allowEmpty: boolean
+): void {
+    if (!allowEmpty && constructors.length == 0) {
+        throw new Error(`Components array cannot be empty.`);
+    }
+    for (const i in constructors) {
+        for (const j in constructors) {
+            if (i == j) continue;
+            if (constructors[i] == constructors[j]) {
+                throw new Error(
+                    `Components array cannot have 2 of the same component type "${constructors[i].name}"`
+                );
+            }
+        }
+    }
+    for (const constructor of constructors) {
+        if (constructor === undefined || constructor === null) {
+            throw new Error(`Component cannot be "${constructor}"`);
+        }
+        if (
+            SAFETY_DISALLOWED_CONSTRUCTORS.some(
+                (DISALLOWED_CONSTRUCTOR) => constructor == DISALLOWED_CONSTRUCTOR
+            )
+        ) {
+            throw new Error(
+                `Disallowed component "${constructor.name}", create a wrapper for it instead`
+            );
+        }
+    }
+}
+
+function safetyCheckComponents(components: Component[], allowEmpty: boolean): void {
+    safetyCheckComponentConstructors(
+        components.map((component) => component.constructor as ComponentConstructor),
+        allowEmpty
+    );
+}
+
+export class Entity<const T extends Component[]> {
     public readonly world: World;
     public readonly id: number;
     public readonly components: T;
@@ -43,6 +95,9 @@ export class Entity<T extends Component[]> {
         components: A,
         callbackfn?: (...components: ComponentConstructorsAsComponents<A>) => unknown
     ): Entity<ComponentConstructorsAsComponents<A>> | null {
+        if (this.world.safetyChecks) {
+            safetyCheckComponentConstructors(components, true);
+        }
         const entity = this.world.queryEntity(this.id, components);
         if (entity === null) {
             return null;
@@ -51,12 +106,49 @@ export class Entity<T extends Component[]> {
         return entity;
     }
 
-    public append<A extends Component[]>(_components: A): Entity<[...T, ...A]> {
-        throw 'unimplemented';
+    public append<const A extends Component[]>(components: A): Entity<[...T, ...A]> {
+        if (this.world.safetyChecks) {
+            safetyCheckComponents(components, true);
+        }
+        const entity = this.world.entities.get(this.id);
+        if (entity === undefined) {
+            throw new Error("Entity doesn't exist");
+        }
+        if (!this.world.entityComponentAppendAllowOverwrite) {
+            for (const component of components) {
+                if (entity.has(component.constructor as ComponentConstructor)) {
+                    throw new Error(
+                        `Cannot append component "${component.constructor.name}" to entity because it already has that component`
+                    );
+                }
+            }
+        }
+        for (const component of components) {
+            entity.set(component.constructor as ComponentConstructor, component);
+        }
+        return new Entity(this.world, this.id, [...this.components, ...components]);
     }
 
-    public remove<A extends Component[]>(_components: ComponentsAsComponentConstructors<A>): void {
-        throw 'unimplemented';
+    public remove<const A extends ComponentConstructor[]>(components: A): void {
+        const entity = this.world.entities.get(this.id);
+        if (entity === undefined) {
+            throw new Error("Entity doesn't exist");
+        }
+        if (this.world.entityComponentRemoveRequired) {
+            for (const component of components) {
+                if (!entity.has(component as ComponentConstructor)) {
+                    throw new Error(
+                        `Cannot remove component "${component.name}" to entity because it doesn't already have that component`
+                    );
+                }
+            }
+        }
+        for (const component of components) {
+            entity.delete(component);
+        }
+        if (!this.world.entityWithZeroComponentsAllowed && entity.size == 0) {
+            this.destroy();
+        }
     }
 }
 
@@ -89,6 +181,14 @@ export class Query<const T extends ComponentConstructor[]> {
         query._with = this._with.union(other._with);
         query._filters = [...this._filters, ...other._filters];
         return query;
+    }
+
+    public validate(): void {
+        safetyCheckComponentConstructors(this.components, true);
+        safetyCheckComponentConstructors(Array.from(this._with), true);
+        this._filters.forEach(([components, _]) => {
+            safetyCheckComponentConstructors(components, true);
+        });
     }
 }
 
@@ -131,21 +231,41 @@ export class System<const T extends SystemQuery> {
 }
 
 export class World<const Stages extends string = string> {
-    public constructor(stages: {
-        [key in Stages]: System<SystemQuery>[];
-    }) {
+    public readonly safetyChecks: boolean;
+    public readonly resourceAllowOverwrite: boolean;
+    public readonly entityComponentAppendAllowOverwrite: boolean;
+    public readonly entityComponentRemoveRequired: boolean;
+    public readonly entityWithZeroComponentsAllowed: boolean;
+
+    public constructor(
+        opts: {
+            safetyChecks?: boolean;
+            resourceAllowOverwrite?: boolean;
+            entityComponentAppendAllowOverwrite?: boolean;
+            entityComponentRemoveRequired?: boolean;
+            entityWithZeroComponentsAllowed?: boolean;
+        } = {},
+        stages: {
+            [key in Stages]: System<SystemQuery>[];
+        }
+    ) {
+        this.safetyChecks = opts.safetyChecks ?? true;
+        this.resourceAllowOverwrite = opts.resourceAllowOverwrite ?? true;
+        this.entityComponentAppendAllowOverwrite = opts.entityComponentAppendAllowOverwrite ?? true;
+        this.entityComponentRemoveRequired = opts.entityComponentRemoveRequired ?? false;
+        this.entityWithZeroComponentsAllowed = opts.entityWithZeroComponentsAllowed ?? true;
+
         this.stages = stages;
+
         this.setResource(this);
     }
-
-    public readonly allowResourceOverwrite: boolean = true;
 
     public readonly resources: Map<ComponentConstructor, Component> = new Map();
 
     public setResource<const T extends Component>(resource: T): T {
         const constructor = resource.constructor as ComponentConstructor;
-        if (!this.allowResourceOverwrite && this.resources.get(constructor) !== undefined) {
-            throw new Error(`ECS setResource resource "${constructor.name}" already exists`);
+        if (!this.resourceAllowOverwrite && this.resources.get(constructor) !== undefined) {
+            throw new Error(`World setResource resource "${constructor.name}" already exists`);
         }
         this.resources.set(constructor, resource);
         return resource;
@@ -158,7 +278,7 @@ export class World<const Stages extends string = string> {
             | ComponentConstructorAsComponent<T>
             | undefined;
         if (resource === undefined) {
-            throw new Error(`ECS getResource resource "${constructor.name}" doesn't exist`);
+            throw new Error(`World getResource resource "${constructor.name}" doesn't exist`);
         }
         return resource;
     }
@@ -167,10 +287,13 @@ export class World<const Stages extends string = string> {
     public readonly entities: Map<number, Map<ComponentConstructor, Component>> = new Map();
 
     public addEntity<const T extends Component[]>(components: T): Entity<T> {
+        if (this.safetyChecks) {
+            safetyCheckComponents(components, this.entityWithZeroComponentsAllowed);
+        }
         const id = this.entityIdCounter++;
-        const componentsMap = new Map();
+        const componentsMap: Map<ComponentConstructor, Component> = new Map();
         for (const component of components) {
-            componentsMap.set(component.constructor, component);
+            componentsMap.set(component.constructor as ComponentConstructor, component);
         }
         this.entities.set(id, componentsMap);
         return new Entity(this, id, components);
@@ -210,6 +333,9 @@ export class World<const Stages extends string = string> {
         if (!(query instanceof Query)) {
             query = new Query(query);
         }
+        if (this.safetyChecks) {
+            query.validate();
+        }
         return this.queryEntityInner(id, entity, query);
     }
 
@@ -218,6 +344,9 @@ export class World<const Stages extends string = string> {
     ): Entity<ComponentConstructorsAsComponents<T>>[] {
         if (!(query instanceof Query)) {
             query = new Query(query);
+        }
+        if (this.safetyChecks) {
+            query.validate();
         }
         return this.entities
             .entries()
@@ -233,26 +362,18 @@ export class World<const Stages extends string = string> {
     public runStage(name: Stages): void {
         const stage = this.stages[name];
         if (stage === undefined) {
-            throw new Error(`ECS stage with name "${name}" doesn't exist`);
+            throw new Error(`World stage with name "${name}" doesn't exist`);
         }
         for (const system of stage) {
-            const args = [];
-            for (const arg of system.query) {
+            const args = system.query.map((arg) => {
                 if (Array.isArray(arg) || arg instanceof Query) {
-                    args.push(this.queryEntities(arg));
+                    return this.queryEntities(arg);
                 } else {
-                    args.push(this.getResource(arg));
+                    return this.getResource(arg);
                 }
-            }
+            });
             // @ts-expect-error - askjdabjdka
             system.callbackfn(...args);
         }
-    }
-
-    public diagnosticInfo(): { numEntities: number; numComponents: number } {
-        return {
-            numEntities: this.entities.size,
-            numComponents: this.entities.values().reduce((count, entity) => count + entity.size, 0)
-        };
     }
 }
