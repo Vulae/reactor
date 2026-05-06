@@ -1,4 +1,4 @@
-import { TileBasicGeneratorType, TileBasicComponentType } from '../component/tile/base/def';
+import { TileBasicGeneratorType, TileBasicComponentType } from '../component/tile/basic';
 
 export class Upgrades {
     public readonly basicGenerator: {
@@ -33,28 +33,24 @@ export class Upgrades {
         durability: number;
         autoReplace: number;
     } {
-        switch (type) {
-            case TileBasicGeneratorType.Uranium:
-                return {
-                    powerGeneration:
-                        (this.basicGenerator[TileBasicGeneratorType.Uranium].powerGeneration + 1) **
-                        10,
-                    durability:
-                        (this.basicGenerator[TileBasicGeneratorType.Uranium].durability + 1) ** 10,
-                    autoReplace: 10000
-                };
-            case TileBasicGeneratorType.Plutonium:
-                return {
-                    powerGeneration:
-                        (this.basicGenerator[TileBasicGeneratorType.Plutonium].powerGeneration +
-                            1) **
-                        10,
-                    durability:
-                        (this.basicGenerator[TileBasicGeneratorType.Plutonium].durability + 1) **
-                        10,
-                    autoReplace: 10000000
-                };
-        }
+        return {
+            powerGeneration:
+                {
+                    [TileBasicGeneratorType.Uranium]: 100,
+                    [TileBasicGeneratorType.Plutonium]: 500000
+                }[type] *
+                (this.basicGenerator[type].powerGeneration + 1) ** 4,
+            durability:
+                {
+                    [TileBasicGeneratorType.Uranium]: 250,
+                    [TileBasicGeneratorType.Plutonium]: 1250000
+                }[type] *
+                50 ** (this.basicGenerator[type].durability + 1),
+            autoReplace: {
+                [TileBasicGeneratorType.Uranium]: 10000,
+                [TileBasicGeneratorType.Plutonium]: 10000000
+            }[type]
+        };
     }
 
     public getBasicGeneratorDurability(type: TileBasicGeneratorType): number {
@@ -88,43 +84,52 @@ export class Upgrades {
         );
     }
 
-    public readonly basicVent: {
-        [_ in TileBasicComponentType]: {
-            ventAmount: number;
-        };
-    } = Object.fromEntries(
-        Object.values(TileBasicComponentType).map((v) => [
-            v,
-            {
-                ventAmount: 0
-            }
-        ])
-    ) as any;
+    public ventEfficiency: number = 0;
+
+    public getVentEffiencyCost(): number {
+        return 250 * (this.ventEfficiency + 1) ** 3;
+    }
 
     public getBasicVentCost(type: TileBasicComponentType): number {
-        switch (type) {
-            case TileBasicComponentType.Basic:
-                return 50;
-            case TileBasicComponentType.Advanced:
-                return 12500;
-        }
+        return {
+            [TileBasicComponentType.Basic]: 50,
+            [TileBasicComponentType.Advanced]: 12500
+        }[type];
     }
 
     public getBasicVentHeatVentAmount(type: TileBasicComponentType): number {
-        switch (type) {
-            case TileBasicComponentType.Basic:
-                return 4;
-            case TileBasicComponentType.Advanced:
-                return 300;
-        }
+        return (
+            {
+                [TileBasicComponentType.Basic]: 4,
+                [TileBasicComponentType.Advanced]: 300
+            }[type] *
+            (this.ventEfficiency + 1)
+        );
     }
 
     public getBasicVentMaxHeat(type: TileBasicComponentType): number {
-        switch (type) {
-            case TileBasicComponentType.Basic:
-                return 40;
-            case TileBasicComponentType.Advanced:
-                return 3000;
-        }
+        return {
+            [TileBasicComponentType.Basic]: 40,
+            [TileBasicComponentType.Advanced]: 3000
+        }[type];
+    }
+
+    public capacitorStorage: number = 0;
+
+    public getBasicCapacitorCost(type: TileBasicComponentType): number {
+        return {
+            [TileBasicComponentType.Basic]: 1000,
+            [TileBasicComponentType.Advanced]: 125000
+        }[type];
+    }
+
+    public getBasicCapacitorPowerStorage(type: TileBasicComponentType): number {
+        return (
+            {
+                [TileBasicComponentType.Basic]: 200,
+                [TileBasicComponentType.Advanced]: 10000
+            }[type] *
+            (this.capacitorStorage + 1)
+        );
     }
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
     import MouseTooltip from '$lib/MouseTooltip.svelte';
     import TextureAtlasImage from '$lib/TextureAtlasImage.svelte';
+    import { updateOn } from '$lib/util';
     import type { Game } from './resource/game';
     import { UpgradeBuyer } from './resource/upgradeBuyer';
     import { ATLAS } from './textures';
@@ -34,11 +35,11 @@
 {/snippet}
 
 {#snippet shopItem(identifier: keyof (typeof UpgradeBuyer)['UPGRADES'])}
-    {@const upgrade = !!rerender ? UpgradeBuyer.UPGRADES[identifier] : null!}
+    {@const upgrade = updateOn(rerender, UpgradeBuyer.UPGRADES[identifier])}
     {@const info = upgrade.info(game)}
     <button
         class="button flex size-9 items-center justify-center"
-        disabled={info.bought === true}
+        disabled={info.buyable === false || info.bought === true}
         onclick={() => {
             upgradeBuyer.tryBuyUpgrade(game, identifier);
         }}
@@ -59,18 +60,19 @@
 -->
 {#key rerender}
     <div class="grid grid-cols-3 gap-1">
-        {@render shopItem('uranium_cell_power_generation')}
-        {@render shopItem('uranium_cell_durability')}
-        {@render shopItem('uranium_cell_autoreplace')}
-        {@render shopItem('plutonium_cell_power_generation')}
-        {@render shopItem('plutonium_cell_durability')}
-        {@render shopItem('plutonium_cell_autoreplace')}
+        {@render shopItem('cell_power_generation_uranium')}
+        {@render shopItem('cell_durability_uranium')}
+        {@render shopItem('cell_autoreplace_uranium')}
+        {@render shopItem('cell_power_generation_plutonium')}
+        {@render shopItem('cell_durability_plutonium')}
+        {@render shopItem('cell_autoreplace_plutonium')}
+        {@render shopItem('vent_efficiency')}
     </div>
 {/key}
 
 {#if hoverShopItem}
-    {@const info = !!rerender ? UpgradeBuyer.UPGRADES[hoverShopItem].info(game) : null!}
-    <MouseTooltip>
+    {@const info = updateOn(rerender, UpgradeBuyer.UPGRADES[hoverShopItem].info(game))}
+    <MouseTooltip style="speech">
         <div class="flex w-min flex-col gap-1 py-1">
             <div class="flex flex-col px-2">
                 <span class="font-jersey text-xl text-nowrap">{info.name}</span>

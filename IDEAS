@@ -1,0 +1,15 @@
+
+CELL:
+    The more power u have in the reactor the more heat it generates.
+    The more heat u have in the reactor the more power it generates.
+
+SPECIAL COMPONENT:
+    Converts power to exotic particles but generates ALOT of heat while doing so.
+    If there's no power to convert, explode causing a meltdown in the reactor.
+
+SPECIAL UPGRADE:
+    Increase power storage by 10x, power sell amount is dictated by demand which is random.
+    Adds a new window that shows current & previous demands on a graph.
+    SPECIAL CAPACITOR:
+        Automatically sells some power when either storage is full, or demand is high.
+        If there is this capacitor in the world, the power demand window will add options for this capacitor.

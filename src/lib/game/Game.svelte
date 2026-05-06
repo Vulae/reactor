@@ -15,6 +15,7 @@
     import { Game } from './resource/game';
     import UpgradesShop from './UpgradesShop.svelte';
     import Options from './Options.svelte';
+    import Stats from './Stats.svelte';
 
     let { dev = $bindable(false) }: { dev?: boolean } = $props();
 
@@ -35,6 +36,17 @@
     let dragActive: boolean = $state(false);
     let positionX: number = $state(0);
     let positionY: number = $state(0);
+
+    let tickRender: number = $state(0);
+    let tickRenderListener: number = -1;
+    $effect(() => {
+        tickRenderListener = game.addEventListener('tickRender', () => {
+            tickRender++;
+        }).id;
+        () => {
+            game.removeEventListener(tickRenderListener);
+        };
+    });
 </script>
 
 <svelte:body
@@ -119,6 +131,16 @@
                     </Window>
                     <Window title="Upgrades" gradientStart="darkviolet" gradientEnd="magenta">
                         <UpgradesShop {game} />
+                    </Window>
+                </div>
+                <div class="bg-drag flex gap-1">
+                    <Window
+                        title="Statistics"
+                        gradientStart="black"
+                        gradientEnd="gray"
+                        collapsable="removed"
+                    >
+                        <Stats {game} />
                     </Window>
                 </div>
                 {#if dev}

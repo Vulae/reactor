@@ -1,7 +1,12 @@
 import { System } from '$lib/ecs';
+import {
+    TileBasicSprite,
+    TileDurability,
+    TileHeatable,
+    TilePos
+} from '$lib/game/component/tile/base';
 import { ATLAS, TILE_SIZE } from '$lib/game/textures';
 import { clamp } from '$lib/util';
-import { TileBasicSprite, TileDurability, TileHeatable, TilePos } from './def';
 
 const BAR_SIZE: number = (1 / TILE_SIZE) * 4;
 

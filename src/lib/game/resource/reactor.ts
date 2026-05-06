@@ -1,7 +1,6 @@
-import { World, System } from '$lib/ecs';
-import { ParticlePos } from '../component/particle/base';
-import { PARTICLE_PLACER } from '../component/particle/placer';
-import { TileDurability, TilePos } from '../component/tile/base/def';
+import type { World } from '$lib/ecs';
+import type { TilePos } from '../component/tile/base';
+import { Stats } from './stats';
 
 export class Reactor {
     public width: number = 10;
@@ -21,37 +20,13 @@ export class Reactor {
         return this.heat > this.maxHeat;
     }
 
-    public static readonly SYSTEM_TICK_END = new System([World, Reactor], (world, reactor) => {
-        reactor.heat--;
-        if (reactor.heat < 0) {
-            reactor.heat = 0;
-        }
-
-        if (reactor.isOverheating()) {
-            const entities = world.queryEntities([TilePos]);
-            for (const entity of entities) {
-                const [pos] = entity.components;
-                entity.with([TileDurability], (_) => {
-                    PARTICLE_PLACER.place(world, new ParticlePos(pos.x, pos.y), 'explosion');
-                });
-                entity.destroy();
-            }
-            if (entities.length > 0) {
-                reactor.heat *= entities.length;
-            }
-            reactor.heat *= 0.95;
-        }
-
-        if (reactor.power > reactor.maxPower) {
-            reactor.power = reactor.maxPower;
-        }
-    });
-
-    public sellPower(): void {
+    public sellPower(world: World): void {
+        const stats = world.getResource(Stats);
         if (this.power > this.maxPower) {
             this.power = this.maxPower;
         }
         this.money += this.power;
+        stats.totalMoneyGainedThisReset += this.power;
         this.power = 0;
     }
 }

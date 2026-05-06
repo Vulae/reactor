@@ -8,14 +8,14 @@
     import { Reactor } from './resource/reactor';
     import { TickManager } from './resource/tickManager';
     import { formatMoney } from './util';
-    import { browser } from '$app/environment';
+    import { updateOn } from '$lib/util';
 
     let { game = $bindable() }: { game: Game } = $props();
 
     let textarea: HTMLTextAreaElement | null = $state(null);
     let textareaUpdate: number = $state(1);
     let textareaEmpty: boolean = $derived(
-        !!textareaUpdate && (textarea as HTMLTextAreaElement | null)?.value.length == 0
+        updateOn(textareaUpdate, (textarea as HTMLTextAreaElement | null)?.value.length == 0)
     );
 
     let saveHover: boolean = $state(false);
@@ -102,7 +102,7 @@
 </div>
 
 {#if saveHover}
-    <MouseTooltip>
+    <MouseTooltip style="area">
         <div class="w-24 p-1 text-center leading-[0.7]">Shift click to save raw data</div>
     </MouseTooltip>
 {/if}

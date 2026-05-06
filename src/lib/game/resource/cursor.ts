@@ -1,5 +1,5 @@
 import { System, type Component, type Entity, type World } from '$lib/ecs';
-import { TileDurability, TileOverwrite, TilePos } from '../component/tile/base/def';
+import { TileDurability, TileType, TilePos } from '../component/tile/base';
 import { ATLAS } from '../textures';
 import { ComponentPlacer } from './componentPlacer';
 import { Game } from './game';
@@ -41,6 +41,12 @@ export class GameCursor {
             return null;
         }
         const entities = world.queryEntities(this.pos.queryOnPos([TilePos]));
+        if (entities.length > 1) {
+            console.warn(
+                `GameCursor.getTile: Multiple entities at the same position: ${this.pos.x}, ${this.pos.y} `,
+                entities
+            );
+        }
         return entities.length > 0 ? entities[0] : null;
     }
 
@@ -65,8 +71,8 @@ export class GameCursor {
                     pos
                         .queryOnPos([])
                         .filter(
-                            [TileOverwrite],
-                            (overwritable) => overwritable.type == overwriteType
+                            [TileType],
+                            (overwritable) => overwritable.weakType == overwriteType
                         )
                 )
                 .forEach((entity) => entity.destroy());
@@ -79,10 +85,32 @@ export class GameCursor {
         return true;
     }
 
+    private tryBuy(game: Game, pos: TilePos): void {
+        const placer = game.world.getResource(ComponentPlacer);
+        if (!placer.selected) return;
+        const reactor = game.world.getResource(Reactor);
+        const selectedPlacer = ComponentPlacer.COMPONENTS[placer.selected];
+        const selectedPlacerInfo = selectedPlacer.info(game);
+        if (reactor.money < selectedPlacerInfo.cost) return;
+        if (this.placeTile(game, pos, selectedPlacer.place(game), selectedPlacerInfo.weakType)) {
+            reactor.money -= selectedPlacerInfo.cost;
+            game.setTickRerender();
+            game.setNeedsSetup();
+        }
+    }
+
+    private trySellOrDestroy(game: Game, _pos: TilePos): void {
+        const entity = this.getTile(game.world);
+        if (!entity) return;
+        entity.destroy();
+        // TODO: Tile selling
+        game.setTickRerender();
+        game.setNeedsSetup();
+    }
+
     public static readonly SYSTEM_RENDER = new System(
-        [Game, CanvasRenderingContext2D, GameCursor, ComponentPlacer, Reactor],
-        (game, ctx, cursor, placer, reactor) => {
-            // TODO: Clean this up, its ugly
+        [Game, CanvasRenderingContext2D, GameCursor, ComponentPlacer],
+        (game, ctx, cursor, placer) => {
             const tile = cursor.getTile(game.world);
             if (tile) {
                 const [pos] = tile.components;
@@ -90,10 +118,6 @@ export class GameCursor {
                 ctx.translate(pos.x, pos.y);
                 ATLAS.draw(ctx, 'cursor_empty');
                 ctx.restore();
-                if (cursor.click == 'secondary') {
-                    tile.destroy();
-                    game.setTickRerender();
-                }
             } else if (cursor.pos && placer.selected) {
                 ctx.save();
                 ctx.translate(cursor.pos.x, cursor.pos.y);
@@ -101,21 +125,11 @@ export class GameCursor {
                 ATLAS.draw(ctx, ComponentPlacer.COMPONENTS[placer.selected].info(game).texture);
                 ctx.restore();
             }
-            if (cursor.changed && cursor.pos && placer.selected && cursor.click == 'primary') {
-                const selectedPlacer = ComponentPlacer.COMPONENTS[placer.selected];
-                const selectedPlacerInfo = selectedPlacer.info(game);
-                if (reactor.money >= selectedPlacerInfo.cost) {
-                    if (
-                        cursor.placeTile(
-                            game,
-                            cursor.pos,
-                            selectedPlacer.place(game),
-                            selectedPlacerInfo.overwriteType
-                        )
-                    ) {
-                        reactor.money -= selectedPlacerInfo.cost;
-                        game.setTickRerender();
-                    }
+            if (cursor.changed && cursor.pos) {
+                if (cursor.click == 'primary') {
+                    cursor.tryBuy(game, cursor.pos);
+                } else if (cursor.click == 'secondary') {
+                    cursor.trySellOrDestroy(game, cursor.pos);
                 }
             }
             cursor.changed = false;

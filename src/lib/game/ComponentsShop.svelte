@@ -1,6 +1,7 @@
 <script lang="ts">
     import MouseTooltip from '$lib/MouseTooltip.svelte';
     import TextureAtlasImage from '$lib/TextureAtlasImage.svelte';
+    import { updateOn } from '$lib/util';
     import { ComponentPlacer } from './resource/componentPlacer';
     import type { Game } from './resource/game';
     import { ATLAS } from './textures';
@@ -26,10 +27,10 @@
 </script>
 
 {#snippet shopItem(identifier: keyof (typeof ComponentPlacer)['COMPONENTS'])}
-    {@const info = !!rerender ? ComponentPlacer.COMPONENTS[identifier].info(game) : null!}
+    {@const info = updateOn(rerender, ComponentPlacer.COMPONENTS[identifier].info(game))}
     <button
         class="button flex size-9 items-center justify-center"
-        class:button-active={!!rerender && placer.selected == identifier}
+        class:button-active={updateOn(rerender, placer.selected == identifier)}
         onclick={() => {
             if (placer.selected == identifier) {
                 placer.selected = null;
@@ -50,19 +51,21 @@
 {/snippet}
 
 <div class="grid grid-cols-3 gap-1">
-    {@render shopItem('uranium_cell_1')}
-    {@render shopItem('uranium_cell_2')}
-    {@render shopItem('uranium_cell_3')}
-    {@render shopItem('plutonium_cell_1')}
-    {@render shopItem('plutonium_cell_2')}
-    {@render shopItem('plutonium_cell_3')}
-    {@render shopItem('basic_vent')}
-    {@render shopItem('advanced_vent')}
+    {@render shopItem('cell_uranium_single')}
+    {@render shopItem('cell_uranium_double')}
+    {@render shopItem('cell_uranium_quad')}
+    {@render shopItem('cell_plutonium_single')}
+    {@render shopItem('cell_plutonium_double')}
+    {@render shopItem('cell_plutonium_quad')}
+    {@render shopItem('vent_basic')}
+    {@render shopItem('vent_advanced')}
+    {@render shopItem('capacitor_basic')}
+    {@render shopItem('capacitor_advanced')}
 </div>
 
 {#if hoverShopItem}
-    {@const info = !!rerender ? ComponentPlacer.COMPONENTS[hoverShopItem].info(game) : null!}
-    <MouseTooltip>
+    {@const info = updateOn(rerender, ComponentPlacer.COMPONENTS[hoverShopItem].info(game))}
+    <MouseTooltip style="speech">
         <div class="flex w-min flex-col gap-1 py-1">
             <div class="flex flex-col px-2">
                 <span class="font-jersey text-xl text-nowrap">{info.name}</span>

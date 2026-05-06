@@ -1,15 +1,4 @@
 import { notNull } from '$lib/util';
-import {
-    TileBasicGenerator,
-    TileBasicGeneratorType,
-    TileBasicHeatVent,
-    TileBasicComponentType,
-    TileBasicSprite,
-    TileDurability,
-    TileHeatable,
-    TileOverwrite,
-    TilePos
-} from './component/tile/base/def';
 import { Game } from './resource/game';
 import { Reactor } from './resource/reactor';
 
@@ -17,6 +6,22 @@ import { deflateSync, inflateSync } from 'fflate';
 import { Base64 } from 'js-base64';
 import { Upgrades } from './resource/upgrades';
 import { TickManager } from './resource/tickManager';
+import {
+    TileBasicSprite,
+    TileCapacitor,
+    TileDurability,
+    TileHeatable,
+    TileType as TileType,
+    TilePos
+} from './component/tile/base';
+import {
+    TileBasicCapacitor,
+    TileBasicComponentType,
+    TileBasicGenerator,
+    TileBasicGeneratorType,
+    TileBasicHeatVent
+} from './component/tile/basic';
+import { Stats } from './resource/stats';
 
 type Constr = new (...args: any) => any;
 type ConstrNew<C extends Constr> = C extends new (...args: any) => infer R ? R : never;
@@ -117,9 +122,21 @@ const SAVERS = [
             }
         );
     })(),
-    ClassSaver.basic('Upgrades', Upgrades, () => new Upgrades(), ['basicGenerator', 'basicVent']),
+    ClassSaver.basic('Stats', Stats, () => new Stats(), [
+        'totalHeatDissipatedThisReset',
+        'totalPowerGeneratedThisReset',
+        'totalMoneyGainedThisReset',
+        'totalHeatDissipated',
+        'totalPowerGenerated',
+        'totalMoneyGained'
+    ]),
+    ClassSaver.basic('Upgrades', Upgrades, () => new Upgrades(), [
+        'basicGenerator',
+        'ventEfficiency',
+        'capacitorStorage'
+    ]),
     ClassSaver.basic('TilePos', TilePos, () => new TilePos(0, 0), ['x', 'y']),
-    ClassSaver.basic('TileOverwrite', TileOverwrite, () => new TileOverwrite(''), ['type']),
+    ClassSaver.basic('TileType', TileType, () => new TileType(''), ['weakType', 'strongType']),
     ClassSaver.basic(
         'TileBasicSprite',
         TileBasicSprite,
@@ -130,6 +147,17 @@ const SAVERS = [
         'heat',
         'maxHeat'
     ]),
+    ClassSaver.basic('TileDurability', TileDurability, () => new TileDurability(0, 0), [
+        'durability',
+        'maxDurability'
+    ]),
+    ClassSaver.basic('TileCapacitor', TileCapacitor, () => new TileCapacitor(0), ['powerAmount']),
+    ClassSaver.basic(
+        'TileBasicGenerator',
+        TileBasicGenerator,
+        () => new TileBasicGenerator(TileBasicGeneratorType.Uranium, 1),
+        ['type', 'tier']
+    ),
     ClassSaver.basic(
         'TileBasicHeatVent',
         TileBasicHeatVent,
@@ -137,16 +165,11 @@ const SAVERS = [
         ['type']
     ),
     ClassSaver.basic(
-        'TileBasicGenerator',
-        TileBasicGenerator,
-        () => new TileBasicGenerator(TileBasicGeneratorType.Uranium, 1),
-        ['type', 'tier']
-    ),
-    ClassSaver.basic('TileDurability', TileDurability, () => new TileDurability(0, 0), [
-        'durability',
-        'maxDurability',
-        'autoreplaceCost'
-    ])
+        'TileBasicCapacitor',
+        TileBasicCapacitor,
+        () => new TileBasicCapacitor(TileBasicComponentType.Basic),
+        ['type']
+    )
 ];
 
 export function saveGameRaw(game: Game): any {

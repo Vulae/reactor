@@ -1,3 +1,20 @@
+// MIT No Attribution
+//
+// Copyright 2026 Vulae
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify,
+// merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+// PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
 export interface Component {
@@ -124,7 +141,15 @@ export class Entity<const T extends Component[]> {
             }
         }
         for (const component of components) {
-            entity.set(component.constructor as ComponentConstructor, component);
+            if (!this.world.entityAddComponentPrototypes) {
+                entity.set(component.constructor as ComponentConstructor, component);
+            } else {
+                let constructor = component.constructor as ComponentConstructor;
+                while (constructor.name != '') {
+                    entity.set(constructor, component);
+                    constructor = Object.getPrototypeOf(constructor);
+                }
+            }
         }
         return new Entity(this.world, this.id, [...this.components, ...components]);
     }
@@ -233,6 +258,7 @@ export class System<const T extends SystemQuery> {
 export class World<const Stages extends string = string> {
     public readonly safetyChecks: boolean;
     public readonly resourceAllowOverwrite: boolean;
+    public readonly entityAddComponentPrototypes: boolean;
     public readonly entityComponentAppendAllowOverwrite: boolean;
     public readonly entityComponentRemoveRequired: boolean;
     public readonly entityWithZeroComponentsAllowed: boolean;
@@ -241,8 +267,29 @@ export class World<const Stages extends string = string> {
         opts: {
             safetyChecks?: boolean;
             resourceAllowOverwrite?: boolean;
+            /**
+             * Add component extended class to components.
+             * ```TypeScript
+             * class AABB {
+             *     // ...
+             * }
+             * class RigidBody extends AABB {
+             *     // ...
+             * }
+             *
+             * world.addEntity([new RigidBody()]);
+             *
+             * // You can query class prototypes.
+             * world.queryEntities([AABB]);
+             * ```
+             */
+            // TODO: Add safety checks!
+            entityAddComponentPrototypes?: boolean;
+            /** Allow appending components to an entity to overwrite matching components. */
             entityComponentAppendAllowOverwrite?: boolean;
+            /** If when removing a component, it must be required to exist before removing it. */
             entityComponentRemoveRequired?: boolean;
+            /** Allow entities with no components. */
             entityWithZeroComponentsAllowed?: boolean;
         } = {},
         stages: {
@@ -251,6 +298,7 @@ export class World<const Stages extends string = string> {
     ) {
         this.safetyChecks = opts.safetyChecks ?? true;
         this.resourceAllowOverwrite = opts.resourceAllowOverwrite ?? true;
+        this.entityAddComponentPrototypes = opts.entityAddComponentPrototypes ?? false;
         this.entityComponentAppendAllowOverwrite = opts.entityComponentAppendAllowOverwrite ?? true;
         this.entityComponentRemoveRequired = opts.entityComponentRemoveRequired ?? false;
         this.entityWithZeroComponentsAllowed = opts.entityWithZeroComponentsAllowed ?? true;
@@ -291,11 +339,19 @@ export class World<const Stages extends string = string> {
             safetyCheckComponents(components, this.entityWithZeroComponentsAllowed);
         }
         const id = this.entityIdCounter++;
-        const componentsMap: Map<ComponentConstructor, Component> = new Map();
+        const entity: Map<ComponentConstructor, Component> = new Map();
         for (const component of components) {
-            componentsMap.set(component.constructor as ComponentConstructor, component);
+            if (!this.entityAddComponentPrototypes) {
+                entity.set(component.constructor as ComponentConstructor, component);
+            } else {
+                let constructor = component.constructor as ComponentConstructor;
+                while (constructor.name != '') {
+                    entity.set(constructor, component);
+                    constructor = Object.getPrototypeOf(constructor);
+                }
+            }
         }
-        this.entities.set(id, componentsMap);
+        this.entities.set(id, entity);
         return new Entity(this, id, components);
     }
 

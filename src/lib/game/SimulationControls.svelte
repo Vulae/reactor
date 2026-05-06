@@ -1,12 +1,10 @@
 <script lang="ts">
-    import ImgButtonPlay from '$lib/assets/button-play.png';
-    import ImgButtonPause from '$lib/assets/button-pause.png';
-    import ImgButtonStep from '$lib/assets/button-step.png';
-    import ImgButtonFastForward from '$lib/assets/button-fast-forward.png';
     import { IntervalCaller } from '$lib/util';
     import { onMount } from 'svelte';
     import type { Game } from './resource/game';
     import { TickManager } from './resource/tickManager';
+    import TextureAtlasImage from '$lib/TextureAtlasImage.svelte';
+    import { ATLAS } from './textures';
 
     let { game }: { game: Game } = $props();
     let tickManager = $derived(game.world.getResource(TickManager));
@@ -75,9 +73,9 @@
             }}
         >
             {#if running}
-                <img class="size-full" src={ImgButtonPause} alt="Pause" draggable="false" />
+                <TextureAtlasImage atlas={ATLAS} texture="button_pause" class="size-full" />
             {:else}
-                <img class="size-full" src={ImgButtonPlay} alt="Play" draggable="false" />
+                <TextureAtlasImage atlas={ATLAS} texture="button_play" class="size-full" />
             {/if}
         </button>
         <button
@@ -91,7 +89,7 @@
                 game.tick();
             }}
         >
-            <img class="size-full" src={ImgButtonStep} alt="Step" draggable="false" />
+            <TextureAtlasImage atlas={ATLAS} texture="button_step" class="size-full" />
         </button>
     </div>
     <div class="flex items-center gap-1">
@@ -113,12 +111,7 @@
                 );
             }}
         >
-            <img
-                class="size-full"
-                src={ImgButtonFastForward}
-                alt="Fast Forward"
-                draggable="false"
-            />
+            <TextureAtlasImage atlas={ATLAS} texture="button_fastforward" class="size-full" />
         </button>
     </div>
 </div>

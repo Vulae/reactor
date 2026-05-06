@@ -1,10 +1,12 @@
 <script lang="ts">
     import type { Game } from './resource/game';
     import { Reactor } from './resource/reactor';
+    import { Stats } from './resource/stats';
     import { formatMoney } from './util';
 
     let { game }: { game: Game } = $props();
     let reactor = $derived(game.world.getResource(Reactor));
+    let stats = $derived(game.world.getResource(Stats));
 
     let rerender = $state(1);
     let tickListener: number = -1;
@@ -31,6 +33,7 @@
         <button
             onclick={() => {
                 reactor.money++;
+                stats.totalMoneyGainedThisReset++;
                 game.setTickRerender();
             }}
             class="button px-2">Scrounge for $1</button

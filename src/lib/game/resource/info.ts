@@ -1,35 +1,39 @@
 import { System } from '$lib/ecs';
 
-export class Dt {
-    private _lastTime: number = 0;
-    private _curTime: number = 0;
-    public get curTime(): number {
-        return this._curTime;
+export class FrameInfo {
+    private _numFrames: number = 0;
+    public get numFrames(): number {
+        return this._numFrames;
+    }
+
+    private _frameStart: number = 0;
+    private _frameEnd: number = 0;
+    private _lastFrameStart: number = 0;
+    public get renderTime(): number {
+        return this._frameEnd - this._frameStart;
     }
     public get dt(): number {
-        return this._curTime - this._lastTime;
+        return this._frameStart - this._lastFrameStart;
     }
 
-    public static readonly SYSTEM = new System([Dt], (dt) => {
-        dt._lastTime = dt._curTime;
-        dt._curTime = performance.now();
-    });
-}
-
-export class FrameInfo {
-    public numFrames: number = 0;
-
-    public lastRenderTimeStart: number = -1;
-    public lastRenderTimeEnd: number = -1;
-
-    public currentRenderTimeStart: number = -1;
+    private _moments: number[] = [];
+    public get fps(): number {
+        return this._moments.length;
+    }
 
     public static readonly SYSTEM_FIRST = new System([FrameInfo], (info) => {
-        info.currentRenderTimeStart = performance.now();
+        const now = performance.now();
+        while (info._moments.length > 0 && info._moments[0] <= now - 1000) {
+            info._moments.shift();
+        }
+        info._moments.push(now);
+
+        info._lastFrameStart = info._frameStart;
+        info._frameStart = now;
     });
+
     public static readonly SYSTEM_LAST = new System([FrameInfo], (info) => {
-        info.numFrames++;
-        info.lastRenderTimeStart = info.currentRenderTimeStart;
-        info.lastRenderTimeEnd = performance.now();
+        info._frameEnd = performance.now();
+        info._numFrames++;
     });
 }

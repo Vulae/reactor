@@ -1,5 +1,4 @@
 import { Query, type ComponentConstructor } from '$lib/ecs';
-import type { Upgrades } from '$lib/game/resource/upgrades';
 import type { ATLAS } from '$lib/game/textures';
 
 export class TilePos {
@@ -33,10 +32,12 @@ export class TilePos {
     }
 }
 
-export class TileOverwrite {
-    public readonly type: string;
-    public constructor(type: string) {
-        this.type = type;
+export class TileType {
+    public readonly weakType: string;
+    public readonly strongType: string | null = null;
+    public constructor(weakType: string, strongType: string | null = null) {
+        this.weakType = weakType;
+        this.strongType = strongType;
     }
 }
 
@@ -59,14 +60,8 @@ export class TileHeatable {
 export class TileDurability {
     public durability: number;
     public maxDurability: number;
-    public autoreplaceCost: number;
-    public constructor(
-        durability: number,
-        autoreplaceCost: number,
-        maxDurability: number = durability
-    ) {
+    public constructor(durability: number, maxDurability: number = durability) {
         this.durability = durability;
-        this.autoreplaceCost = autoreplaceCost;
         this.maxDurability = maxDurability;
     }
 
@@ -84,55 +79,9 @@ export class TileDurability {
     }
 }
 
-export enum TileBasicGeneratorType {
-    Uranium = 'Uranium',
-    Plutonium = 'Plutonium'
-}
-
-export class TileBasicGenerator {
-    public readonly type: TileBasicGeneratorType;
-    public readonly tier: 0 | 1 | 2;
-    public constructor(type: TileBasicGeneratorType, tier: 0 | 1 | 2) {
-        this.type = type;
-        this.tier = tier;
-    }
-
-    public getMaxDurability(upgrades: Upgrades): number {
-        return upgrades.getBasicGeneratorDurability(this.type);
-    }
-
-    public getHeatGeneration(upgrades: Upgrades): number {
-        return upgrades.getBasicGeneratorHeatGeneration(this.type, this.tier);
-    }
-
-    public getPowerGeneration(upgrades: Upgrades): number {
-        return upgrades.getBasicGeneratorPowerGeneration(this.type, this.tier);
-    }
-}
-
-export enum TileBasicComponentType {
-    Basic = 'Basic',
-    Advanced = 'Advanced'
-}
-
-export class TileBasicHeatVent {
-    public readonly type: TileBasicComponentType;
-    public constructor(type: TileBasicComponentType) {
-        this.type = type;
-    }
-
-    public getMaxHeat(reactor: Upgrades) {
-        return reactor.getBasicVentMaxHeat(this.type);
-    }
-
-    public getHeatVentAmount(reactor: Upgrades) {
-        return reactor.getBasicVentHeatVentAmount(this.type);
-    }
-}
-
-export class TileBasicCapacitor {
-    public readonly type: TileBasicComponentType;
-    public constructor(type: TileBasicComponentType) {
-        this.type = type;
+export class TileCapacitor {
+    public powerAmount: number;
+    public constructor(powerAmount: number) {
+        this.powerAmount = powerAmount;
     }
 }

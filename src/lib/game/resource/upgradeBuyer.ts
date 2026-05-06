@@ -1,5 +1,5 @@
 import { EventDispatcher } from '$lib/eventDispatcher';
-import { TileBasicGeneratorType } from '../component/tile/base/def';
+import { TileBasicGeneratorType } from '../component/tile/basic';
 import type { ATLAS } from '../textures';
 import type { Game } from './game';
 import { Reactor } from './reactor';
@@ -9,8 +9,9 @@ type Info = {
     readonly name: string;
     readonly description: string;
     readonly textures: (keyof (typeof ATLAS)['textures'])[];
+    readonly buyable?: boolean;
     readonly bought: number | boolean;
-    readonly cost: number | undefined;
+    readonly cost?: number | null;
 };
 
 class Upgrade {
@@ -33,6 +34,7 @@ function upgradesBasicCellPowerGeneration(
                 name: `${type} Cell Power Generation`,
                 description: `Increases the base ${type} Cell power generation by +100% per level`,
                 textures: [texture, 'upgrade_power'],
+                buyable: upgrades.basicGenerator[type].powerGeneration < 100,
                 bought: upgrades.basicGenerator[type].powerGeneration,
                 cost: upgrades.getBasicGeneratorUpgradeCost(type).powerGeneration
             };
@@ -55,6 +57,7 @@ function upgradesBasicCellDurability(
                 name: `${type} Cell Durability`,
                 description: `${type} Cells last *200% per level`,
                 textures: [texture, 'upgrade_duration'],
+                buyable: upgrades.basicGenerator[type].durability < 10,
                 bought: upgrades.basicGenerator[type].durability,
                 cost: upgrades.getBasicGeneratorUpgradeCost(type).durability
             };
@@ -77,6 +80,7 @@ function upgradesBasicCellAutoReplace(
                 name: `Perpetual ${type} Cells`,
                 description: `Auto replace ${type} Cells when they become depleted`,
                 textures: [texture, 'upgrade_infinite'],
+                buyable: !upgrades.basicGenerator[type].autoReplace,
                 bought: upgrades.basicGenerator[type].autoReplace,
                 cost: upgrades.getBasicGeneratorUpgradeCost(type).autoReplace
             };
@@ -89,29 +93,45 @@ function upgradesBasicCellAutoReplace(
 }
 
 const UPGRADES = {
-    uranium_cell_power_generation: upgradesBasicCellPowerGeneration(
+    cell_power_generation_uranium: upgradesBasicCellPowerGeneration(
         TileBasicGeneratorType.Uranium,
-        'uranium_cell_1'
+        'cell_uranium_single'
     ),
-    uranium_cell_durability: upgradesBasicCellDurability(
+    cell_durability_uranium: upgradesBasicCellDurability(
         TileBasicGeneratorType.Uranium,
-        'uranium_cell_1'
+        'cell_uranium_single'
     ),
-    uranium_cell_autoreplace: upgradesBasicCellAutoReplace(
+    cell_autoreplace_uranium: upgradesBasicCellAutoReplace(
         TileBasicGeneratorType.Uranium,
-        'uranium_cell_1'
+        'cell_uranium_single'
     ),
-    plutonium_cell_power_generation: upgradesBasicCellPowerGeneration(
+    cell_power_generation_plutonium: upgradesBasicCellPowerGeneration(
         TileBasicGeneratorType.Plutonium,
-        'plutonium_cell_1'
+        'cell_plutonium_single'
     ),
-    plutonium_cell_durability: upgradesBasicCellDurability(
+    cell_durability_plutonium: upgradesBasicCellDurability(
         TileBasicGeneratorType.Plutonium,
-        'plutonium_cell_1'
+        'cell_plutonium_single'
     ),
-    plutonium_cell_autoreplace: upgradesBasicCellAutoReplace(
+    cell_autoreplace_plutonium: upgradesBasicCellAutoReplace(
         TileBasicGeneratorType.Plutonium,
-        'plutonium_cell_1'
+        'cell_plutonium_single'
+    ),
+    vent_efficiency: new Upgrade(
+        (game) => {
+            const upgrades = game.world.getResource(Upgrades);
+            return {
+                name: `Efficient Vents`,
+                description: `Increases vent amount by +100% per level`,
+                textures: ['vent_basic', 'upgrade_plus'],
+                bought: upgrades.ventEfficiency,
+                cost: upgrades.getVentEffiencyCost()
+            };
+        },
+        (game) => {
+            const upgrades = game.world.getResource(Upgrades);
+            upgrades.ventEfficiency++;
+        }
     )
 } as const;
 
@@ -122,13 +142,15 @@ export class UpgradeBuyer extends EventDispatcher<{ update: null }> {
         const reactor = game.world.getResource(Reactor);
         const upgrade = UpgradeBuyer.UPGRADES[identifier];
         const info = upgrade.info(game);
-        if (info.cost === undefined) return;
+        if (info.buyable === false) return;
+        if (typeof info.cost !== 'number') return;
         if (reactor.money >= info.cost) {
             if (info.bought === true) {
                 return;
             }
             upgrade.buy(game);
             reactor.money -= info.cost;
+            game.setNeedsSetup();
             this.dispatchEvent('update', null);
         }
     }

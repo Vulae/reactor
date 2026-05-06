@@ -38,9 +38,12 @@
         {#key frame}
             Frame: {frameInfo.numFrames}
             <br />
-            RenderTime: {Math.floor(
-                (frameInfo.lastRenderTimeEnd - frameInfo.lastRenderTimeStart) * 10
-            ) / 10}ms
+            FPS: {frameInfo.fps}
+            <br />
+            RenderTime: {Math.floor(frameInfo.renderTime * 10) / 10}ms
+            <br />
+            DeltaTime: {Math.floor(frameInfo.dt * 10) / 10}ms
+            <br />
             <br />
             Entities: {game.world.entities.size} ({game.world.entities
                 .values()

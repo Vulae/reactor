@@ -1,46 +1,61 @@
 import { dev } from '$app/environment';
 import { System, World } from '$lib/ecs';
 import { EventDispatcher } from '$lib/eventDispatcher';
-import { ParticleBasicRenderer, ParticleLifetime } from '../component/particle/base';
-import { ParticleExplosionRenderer } from '../component/particle/explosion';
-import {
-    SYSTEM_RENDER_DURABILITY,
-    SYSTEM_RENDER_HEATABLE,
-    SYSTEM_RENDER_SPRITE
-} from '../component/tile/base/render';
-import {
-    SYSTEM_TICK_BASIC_GENERATOR,
-    SYSTEM_TICK_BASIC_HEATVENT,
-    SYSTEM_TICK_DURABILITY,
-    SYSTEM_TICK_HEATABLE
-} from '../component/tile/base/tick';
 import { ATLAS } from '../textures';
 import { GameCursor } from './cursor';
 import { TickManager } from './tickManager';
-import { Dt, FrameInfo } from './info';
+import { FrameInfo } from './info';
 import { GameRenderOptions } from './options';
 import { Reactor } from './reactor';
 import { Upgrades } from './upgrades';
 import { ComponentPlacer } from './componentPlacer';
 import { UpgradeBuyer } from './upgradeBuyer';
+import { SYSTEM_SETUP_REACTOR, SYSTEM_TICK_REACTOR } from '../system/reactor';
+import { ParticleExplosion, ParticleLifetime } from '../component/particle';
+import {
+    SYSTEM_TICK_BASIC_GENERATOR,
+    SYSTEM_TICK_BASIC_HEATVENT,
+    SYSTEM_TICK_DURABILITY,
+    SYSTEM_TICK_HEATABLE
+} from '../system/tile/tick';
+import {
+    SYSTEM_SETUP_BASIC_CAPACITOR,
+    SYSTEM_SETUP_BASIC_GENERATOR,
+    SYSTEM_SETUP_BASIC_HEATVENT
+} from '../system/tile/setup';
+import {
+    SYSTEM_RENDER_DURABILITY,
+    SYSTEM_RENDER_HEATABLE,
+    SYSTEM_RENDER_SPRITE
+} from '../system/tile/render';
+import { Stats } from './stats';
 
 const CREATE_SYSTEMS = () => ({
+    setup: [
+        SYSTEM_SETUP_BASIC_HEATVENT,
+        SYSTEM_SETUP_BASIC_GENERATOR,
+        SYSTEM_SETUP_BASIC_CAPACITOR,
+        SYSTEM_SETUP_REACTOR
+    ],
     tick: [
         TickManager.SYSTEM_TICK,
 
         SYSTEM_TICK_HEATABLE,
 
-        SYSTEM_TICK_BASIC_HEATVENT,
-
         SYSTEM_TICK_BASIC_GENERATOR,
+        SYSTEM_TICK_BASIC_HEATVENT,
 
         SYSTEM_TICK_DURABILITY,
 
-        Reactor.SYSTEM_TICK_END
+        SYSTEM_TICK_REACTOR,
+        new System([Game, Reactor], (game, reactor) => {
+            if (reactor.isOverheating()) {
+                game.setNeedsSetup();
+            }
+        })
     ],
     render: [
         FrameInfo.SYSTEM_FIRST,
-        Dt.SYSTEM,
 
         new System(
             [CanvasRenderingContext2D, Reactor, GameRenderOptions],
@@ -71,9 +86,8 @@ const CREATE_SYSTEMS = () => ({
         SYSTEM_RENDER_HEATABLE,
         SYSTEM_RENDER_DURABILITY,
 
-        ParticleLifetime.SYSTEM,
-        ParticleBasicRenderer.SYSTEM,
-        ParticleExplosionRenderer.SYSTEM,
+        ParticleLifetime.SYSTEM_RENDER,
+        ParticleExplosion.SYSTEM_RENDER,
 
         GameCursor.SYSTEM_RENDER,
 
@@ -93,7 +107,7 @@ export class Game extends EventDispatcher<{
 }> {
     public saveDate: Date | null = null;
 
-    public readonly world: World<'tick' | 'render'>;
+    public readonly world: World<'setup' | 'tick' | 'render'>;
 
     public constructor() {
         super();
@@ -104,14 +118,14 @@ export class Game extends EventDispatcher<{
                 resourceAllowOverwrite: true,
                 entityComponentAppendAllowOverwrite: true,
                 entityComponentRemoveRequired: false,
-                entityWithZeroComponentsAllowed: false
+                entityWithZeroComponentsAllowed: false,
+                entityAddComponentPrototypes: false
             },
             CREATE_SYSTEMS()
         );
 
         this.world.setResource(this);
 
-        this.world.setResource(new Dt());
         this.world.setResource(new FrameInfo());
 
         this.world.setResource(new GameRenderOptions());
@@ -119,6 +133,8 @@ export class Game extends EventDispatcher<{
         this.world.setResource(new GameCursor());
         this.world.setResource(new ComponentPlacer());
         this.world.setResource(new UpgradeBuyer());
+
+        this.world.setResource(new Stats());
 
         this.world.setResource(new Reactor());
         this.world.setResource(new Upgrades());
@@ -144,7 +160,16 @@ export class Game extends EventDispatcher<{
         this.tickRerender = true;
     }
 
+    private needsSetup: boolean = true;
+    public setNeedsSetup(): void {
+        this.needsSetup = true;
+    }
+
     public render(): void {
+        if (this.needsSetup) {
+            this.world.runStage('setup');
+            this.needsSetup = false;
+        }
         this.world.runStage('render');
         this.dispatchEvent('render', null);
         if (this.tickRerender) {
@@ -154,6 +179,8 @@ export class Game extends EventDispatcher<{
     }
 
     public tick(): void {
+        this.needsSetup = false;
+        this.world.runStage('setup');
         this.world.runStage('tick');
         this.dispatchEvent('tick', null);
         this.tickRerender = true;
