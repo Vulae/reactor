@@ -1,0 +1,5 @@
+/* This file is only here to make prettier actually work, IDK why it's needed but it is. */
+
+@import 'tailwindcss/preflight';
+@import 'tailwindcss/theme';
+@import 'tailwindcss/utilities';

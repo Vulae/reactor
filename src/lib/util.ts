@@ -1,30 +1,30 @@
-import type { Action } from 'svelte/action';
-
 export class RenderFrameCaller {
-    private callback: () => void;
-    public constructor(callback: () => void) {
-        this.callback = callback;
-    }
-
+    private callback: (time: DOMHighResTimeStamp) => void;
     private running: boolean = false;
     private animframe: number = -1;
 
-    private step(): void {
-        if (!this.running) return;
-        cancelAnimationFrame(this.animframe);
-        this.animframe = requestAnimationFrame(() => this.step());
-        this.callback();
+    public constructor(callback: (time: DOMHighResTimeStamp) => void) {
+        this.callback = callback;
     }
 
+    private step = (time: DOMHighResTimeStamp): void => {
+        if (!this.running) return;
+        this.animframe = requestAnimationFrame(this.step);
+        this.callback(time);
+    };
+
     public start(): void {
+        if (this.running) return;
         this.running = true;
         cancelAnimationFrame(this.animframe);
-        requestAnimationFrame(() => this.step());
+        this.animframe = requestAnimationFrame(this.step);
     }
 
     public stop(): void {
         this.running = false;
-        cancelAnimationFrame(this.animframe);
+        if (this.animframe !== null) {
+            cancelAnimationFrame(this.animframe);
+        }
     }
 }
 
@@ -41,6 +41,7 @@ export class IntervalCaller {
     public start(): void {
         this.running = true;
         clearInterval(this.interval);
+        // @ts-expect-error - Node & browser have different types.
         this.interval = setInterval(() => this.callback(), this.milliseconds);
     }
 
@@ -64,44 +65,6 @@ export class IntervalCaller {
     }
 }
 
-export const resize: Action<HTMLElement, (width: number, height: number) => void> = (
-    node,
-    callbackfn
-) => {
-    const observer = new ResizeObserver(() => {
-        callbackfn(node.clientWidth, node.clientHeight);
-    });
-
-    observer.observe(node);
-
-    return {
-        destroy() {
-            observer.unobserve(node);
-            observer.disconnect();
-        }
-    };
-};
-
-export const visibility: Action<
-    HTMLElement,
-    (isVisible: boolean, visibilityRatio: number) => void
-> = (node, callbackfn) => {
-    const observer = new IntersectionObserver((entries) => {
-        const nodeEntry = entries.find((entry) => entry.target == node);
-        if (!nodeEntry) return;
-        callbackfn(nodeEntry.isIntersecting, nodeEntry.intersectionRatio);
-    });
-
-    observer.observe(node);
-
-    return {
-        destroy() {
-            observer.unobserve(node);
-            observer.disconnect();
-        }
-    };
-};
-
 export function notNull<T>(value: T | null): value is T {
     return value !== null;
 }
@@ -112,4 +75,12 @@ export function hoiseArrayNull<T>(arr: (T | null)[]): T[] | null {
     } else {
         return null;
     }
+}
+
+export function clamp(v: number, min: number, max: number): number {
+    return v < min ? min : v > max ? max : v;
+}
+
+export function updateOn<T>(_acc: number, v: T): T {
+    return v;
 }

@@ -13,23 +13,13 @@ jobs:
             - name: Perform Checkout
               uses: actions/checkout@v3
 
-            - name: Use Node.js
-              uses: actions/setup-node@v3
+            - name: Use Bun
+              uses: oven-sh/setup-bun@v2
               with:
-                  node-version: '22.x'
-                  cache: 'npm'
-
-            # I give up, I know this is very stupid.
-            # GitHub actions really doesn't like this script, so we just override it.
-            - run: 'echo "#\! /usr/bin/env bash" > ./nixos-patch-linker-of-binary-executables.sh'
-            - name: Install
-              run: npm ci
-
-            - name: Disable Debug Mode
-              run: 'echo "export const DEBUG: boolean = false;" > ./src/lib/DEBUG.ts'
+                  bun-version: latest
 
             - name: Build
-              run: npm run build
+              run: bun run build
 
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3

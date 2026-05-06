@@ -12,5 +12,6 @@
                 "parser": "svelte"
             }
         }
-    ]
+    ],
+    "tailwindStylesheet": "./src/prettier.layout.css"
 }

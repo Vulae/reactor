@@ -1,5 +1,3 @@
-import { hoiseArrayNull } from './util';
-
 function toImageData(image: HTMLImageElement): ImageData | null {
     if (!image.complete || image.naturalWidth === 0) {
         return null;
@@ -11,132 +9,170 @@ function toImageData(image: HTMLImageElement): ImageData | null {
     return ctx.getImageData(0, 0, image.naturalWidth, image.naturalHeight);
 }
 
-function rebuildAtlas<
-    Textures extends {
-        [key: string]: [number, number, number, number];
+type TextureAtlasObj<T extends string> = { [_ in T]: [number, number, number, number] };
+
+class Rect {
+    public readonly x: number;
+    public readonly y: number;
+    public readonly width: number;
+    public readonly height: number;
+
+    public constructor(x: number, y: number, width: number, height: number) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
->(imageData: ImageData, textures: Textures, pad: boolean = true): [ImageData, Textures] {
-    /** https://blackpawn.com/texts/lightmaps/ */
-    class PackerNode {
-        public readonly x: number;
-        public readonly y: number;
-        public readonly width: number;
-        public readonly height: number;
-
-        public value: null | [PackerNode, PackerNode] | keyof Textures = null;
-
-        public constructor(x: number, y: number, width: number, height: number) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-        }
-
-        public insert(texture: keyof Textures, width: number, height: number): PackerNode | null {
-            if (Array.isArray(this.value)) {
-                return (
-                    this.value[0].insert(texture, width, height) ??
-                    this.value[1].insert(texture, width, height)
-                );
-            }
-
-            if (typeof this.value == 'string') {
-                return null;
-            }
-
-            if (width > this.width || height > this.height) {
-                return null;
-            }
-
-            if (width == this.width && height == this.height) {
-                this.value = texture;
-                return this;
-            }
-
-            const dw = this.width - width;
-            const dh = this.height - height;
-            this.value = [
-                dw > dh
-                    ? new PackerNode(this.x, this.y, width, this.height)
-                    : new PackerNode(this.x, this.y, this.width, height),
-                dw > dh
-                    ? new PackerNode(this.x + width, this.y, this.width - width, this.height)
-                    : new PackerNode(this.x, this.y + height, this.width, this.height - height)
-            ];
-
-            return this.value[0].insert(texture, width, height);
-        }
-    }
-
-    for (let size = 32; size <= 2 ** 16; size *= 2) {
-        const root = new PackerNode(0, 0, size, size);
-
-        const textureNodes = hoiseArrayNull(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            Object.entries(textures).map(([texture, [_x, _y, w, h]]) =>
-                root.insert(texture, w + (pad ? 1 : 0), h + (pad ? 1 : 0))
-            )
-        );
-
-        if (!textureNodes) {
-            continue;
-        }
-
-        const originalCanvas = new OffscreenCanvas(imageData.width, imageData.height);
-        const originalCtx = originalCanvas.getContext('2d')!;
-        originalCtx.putImageData(imageData, 0, 0);
-
-        const rebuiltCanvas = new OffscreenCanvas(root.width, root.height);
-        const rebuiltCtx = rebuiltCanvas.getContext('2d')!;
-
-        const packedTextures = Object.fromEntries(
-            textureNodes.map((node) => {
-                if (typeof node.value != 'string') {
-                    throw new Error('unreachable');
-                }
-
-                const [originalX, originalY, originalWidth, originalHeight] = textures[node.value];
-
-                if (
-                    node.width - (pad ? 1 : 0) != originalWidth ||
-                    node.height - (pad ? 1 : 0) != originalHeight
-                ) {
-                    throw new Error('MY SANITY CHECK');
-                }
-
-                rebuiltCtx.putImageData(
-                    originalCtx.getImageData(originalX, originalY, originalWidth, originalHeight),
-                    node.x,
-                    node.y
-                );
-
-                return [
-                    node.value,
-                    [node.x, node.y, node.width - (pad ? 1 : 0), node.height - (pad ? 1 : 0)]
-                ];
-            })
-        ) as Textures;
-
-        return [rebuiltCtx.getImageData(root.x, root.y, root.width, root.height), packedTextures];
-    }
-
-    console.warn('Could not pack atlas texture to reasonable size!');
-    return [imageData, textures];
 }
 
-export class TextureAtlas<
-    Textures extends {
-        [key: string]: [number, number, number, number];
+const PACKER_NODE_UNOCCUPIED = Symbol('packer-node-unoccupied');
+const PACKER_NODE_OCCUPIED = Symbol('packer-node-occupied');
+
+/** https://blackpawn.com/texts/lightmaps/ */
+class PackerNode {
+    public readonly rect: Rect;
+    public state:
+        | typeof PACKER_NODE_UNOCCUPIED
+        | typeof PACKER_NODE_OCCUPIED
+        | [PackerNode, PackerNode] = PACKER_NODE_UNOCCUPIED;
+
+    public constructor(rect: Rect) {
+        this.rect = rect;
     }
-> {
+
+    public insert(width: number, height: number): Rect | null {
+        if (this.state == PACKER_NODE_OCCUPIED) {
+            return null;
+        }
+
+        if (this.state != PACKER_NODE_UNOCCUPIED) {
+            return this.state[0].insert(width, height) ?? this.state[1].insert(width, height);
+        }
+
+        if (this.rect.width < width || this.rect.height < height) {
+            return null;
+        }
+        if (this.rect.width == width && this.rect.height == height) {
+            this.state = PACKER_NODE_OCCUPIED;
+            return this.rect;
+        }
+
+        if (this.rect.width - width > this.rect.height - height) {
+            this.state = [
+                new PackerNode(new Rect(this.rect.x, this.rect.y, width, this.rect.height)),
+                new PackerNode(
+                    new Rect(
+                        this.rect.x + width,
+                        this.rect.y,
+                        this.rect.width - width,
+                        this.rect.height
+                    )
+                )
+            ];
+        } else {
+            this.state = [
+                new PackerNode(new Rect(this.rect.x, this.rect.y, this.rect.width, height)),
+                new PackerNode(
+                    new Rect(
+                        this.rect.x,
+                        this.rect.y + height,
+                        this.rect.width,
+                        this.rect.height - height
+                    )
+                )
+            ];
+        }
+        return this.state[0].insert(width, height);
+    }
+}
+
+function findBestPackedAtlasSize<Textures extends string>(
+    textures: TextureAtlasObj<Textures>,
+    pad: boolean = true
+): number {
+    function pack<Textures extends string>(
+        textures: TextureAtlasObj<Textures>,
+        pad: boolean,
+        size: number
+    ): boolean {
+        const root = new PackerNode(new Rect(0, 0, size, size));
+        for (const texture in textures) {
+            const [_sx, _sy, sw, sh] = textures[texture];
+            if (root.insert(sw + (pad ? 1 : 0), sh + (pad ? 1 : 0)) === null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    let low = 1;
+    while (!pack(textures, pad, low)) {
+        low <<= 1;
+    }
+    let high = low;
+    low >>= 1;
+    let best = high;
+    while (low <= high) {
+        const mid = low + ((high - low) >> 1);
+        if (pack(textures, pad, mid)) {
+            best = mid;
+            high = mid - 1;
+        } else {
+            low = mid + 1;
+        }
+    }
+    return best;
+}
+
+function rebuildAtlas<Textures extends string>(
+    imageData: ImageData,
+    textures: TextureAtlasObj<Textures>,
+    pad: boolean = false
+): [ImageData, TextureAtlasObj<Textures>] {
+    const originalCanvas = new OffscreenCanvas(imageData.width, imageData.height);
+    const originalCtx = originalCanvas.getContext('2d', {
+        willReadFrequently: true
+    })!;
+    originalCtx.putImageData(imageData, 0, 0);
+
+    const rebuiltSize = findBestPackedAtlasSize(textures, pad);
+
+    const rebuiltCanvas = new OffscreenCanvas(rebuiltSize, rebuiltSize);
+    const rebuiltCtx = rebuiltCanvas.getContext('2d')!;
+
+    const root = new PackerNode(new Rect(0, 0, rebuiltSize, rebuiltSize));
+    const rebuiltTextures: TextureAtlasObj<Textures> = {} as TextureAtlasObj<Textures>;
+
+    for (const texture in textures) {
+        const [sx, sy, sw, sh] = textures[texture];
+        const rect = root.insert(sw + (pad ? 1 : 0), sh + (pad ? 1 : 0));
+        if (rect === null) {
+            throw 'kajsdhakdasd';
+        }
+        rebuiltTextures[texture] = [
+            rect.x,
+            rect.y,
+            rect.width - (pad ? 1 : 0),
+            rect.height - (pad ? 1 : 0)
+        ];
+        rebuiltCtx.putImageData(originalCtx.getImageData(sx, sy, sw, sh), rect.x, rect.y);
+    }
+
+    return [
+        rebuiltCtx.getImageData(root.rect.x, root.rect.y, root.rect.width, root.rect.height),
+        rebuiltTextures
+    ];
+}
+
+export class TextureAtlas<Textures extends string> {
     private rebuilt: OffscreenCanvas | null = null;
-    private rebuiltTextures: Textures | null = null;
+    private rebuiltTextures: TextureAtlasObj<Textures> | null = null;
 
     private image: HTMLImageElement;
 
-    public readonly textures: Textures;
+    public readonly textures: TextureAtlasObj<Textures>;
 
-    public constructor(image: HTMLImageElement | string, textures: Textures) {
+    public constructor(image: HTMLImageElement | string, textures: TextureAtlasObj<Textures>) {
         if (typeof image == 'string') {
             this.image = new Image();
             this.image.src = image;
@@ -164,7 +200,7 @@ export class TextureAtlas<
 
     public draw(
         ctx: CanvasRenderingContext2D,
-        texture: keyof Textures,
+        texture: Textures,
         x: number = 0,
         y: number = 0,
         w: number = 1,
@@ -208,7 +244,7 @@ export class TextureAtlas<
         return await this.rebuilt!.convertToBlob({ type: 'image/png' });
     }
 
-    private async blob(texture: keyof Textures): Promise<Blob> {
+    private async blob(texture: Textures): Promise<Blob> {
         const [sx, sy, sw, sh] = this.rebuiltTextures![texture];
         const canvas = new OffscreenCanvas(sw, sh);
         const ctx = canvas.getContext('2d')!;
@@ -216,18 +252,37 @@ export class TextureAtlas<
         return await canvas.convertToBlob({ type: 'image/png' });
     }
 
-    public async getTextureImageBlob(texture: keyof Textures): Promise<Blob> {
+    private readonly blobCache: Map<Textures, string> = new Map();
+
+    public clearBlobCache(): void {
+        for (const [_, url] of this.blobCache) {
+            URL.revokeObjectURL(url);
+        }
+        this.blobCache.clear();
+    }
+
+    public async getTextureImageAsBlobURL(texture: Textures): Promise<string> {
+        {
+            const cached = this.blobCache.get(texture);
+            if (cached !== undefined) {
+                return cached;
+            }
+        }
         await this.awaitLoad();
-        return await this.blob(texture);
+        const blob = await this.blob(texture);
+        {
+            const cached = this.blobCache.get(texture);
+            if (cached !== undefined) {
+                return cached;
+            }
+        }
+        const url = URL.createObjectURL(blob);
+        this.blobCache.set(texture, url);
+        return url;
     }
 }
 
-export class TextureAtlasAnimation<
-    Textures extends {
-        [key: string]: [number, number, number, number];
-    },
-    Frames extends (keyof Textures)[]
-> {
+export class TextureAtlasAnimation<Textures extends string, Frames extends Textures[]> {
     public readonly atlas: TextureAtlas<Textures>;
     public readonly frames: Frames;
     public drawOutOfBounds: boolean;
