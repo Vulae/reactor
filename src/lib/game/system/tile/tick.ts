@@ -52,7 +52,9 @@ export const SYSTEM_TICK_BASIC_GENERATOR = new System(
                 }
             }
 
-            const nearby = entity.world.queryEntities(pos.queryWithinDistance([TileHeatable], 1));
+            const nearby = entity.world.components.entities(
+                pos.queryWithinDistance([TileHeatable], 1)
+            );
             if (nearby.length == 0) {
                 reactor.heat += generator.getHeatGeneration(upgrades);
             } else {

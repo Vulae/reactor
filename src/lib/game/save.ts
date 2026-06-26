@@ -22,25 +22,45 @@ import {
     TileBasicHeatVent
 } from './component/tile/basic';
 import { Stats } from './resource/stats';
+import { World } from '$lib/ecs';
+import { FrameInfo } from './resource/info';
+import { GameRenderOptions } from './resource/options';
+import { GameCursor } from './resource/cursor';
+import { ComponentPlacer } from './resource/componentPlacer';
+import { UpgradeBuyer } from './resource/upgradeBuyer';
+import { ParticleExplosion, ParticleLifetime, ParticlePos } from './component/particle';
 
 type Constr = new (...args: any) => any;
 type ConstrNew<C extends Constr> = C extends new (...args: any) => infer R ? R : never;
 
+const SAVER_NONE = Symbol('SAVER_NONE');
+
 class ClassSaver<C extends Constr> {
     public readonly name: string;
     public readonly constr: C;
-    public readonly save: (v: ConstrNew<C>) => { [key: string]: any };
+    public readonly save: (v: ConstrNew<C>) => { [key: string]: any } | typeof SAVER_NONE;
     public readonly load: (v: { [key: string]: any }) => ConstrNew<C>;
     public constructor(
         name: string,
         constr: C,
-        save: (v: ConstrNew<C>) => { [key: string]: any },
+        save: (v: ConstrNew<C>) => { [key: string]: any } | typeof SAVER_NONE,
         load: (v: { [key: string]: any }) => ConstrNew<C>
     ) {
         this.name = name;
         this.constr = constr;
         this.save = save;
         this.load = load;
+    }
+
+    public static none<C extends Constr>(name: string, constr: C): ClassSaver<C> {
+        return new ClassSaver(
+            name,
+            constr,
+            () => SAVER_NONE,
+            () => {
+                throw new Error('Unreachable');
+            }
+        );
     }
 
     public static basic<C extends Constr>(
@@ -70,7 +90,15 @@ function extract<T extends { [key: string]: any }, K extends { [key: string]: an
     return to;
 }
 
-const SAVERS = [
+const SAVERS_RESOURCES: ClassSaver<Constr>[] = [
+    ClassSaver.none('Game', Game),
+    ClassSaver.none('World', World),
+    ClassSaver.none('FrameInfo', FrameInfo),
+    ClassSaver.none('GameRenderOptions', GameRenderOptions),
+    ClassSaver.none('GameCursor', GameCursor),
+    ClassSaver.none('ComponentPlacer', ComponentPlacer),
+    ClassSaver.none('UpgradeBuyer', UpgradeBuyer),
+    ClassSaver.none('CanvasRenderingContext2D', CanvasRenderingContext2D),
     (() => {
         const KEYS: (keyof TickManager)[] = [
             'numTicks',
@@ -134,7 +162,13 @@ const SAVERS = [
         'basicGenerator',
         'ventEfficiency',
         'capacitorStorage'
-    ]),
+    ])
+];
+
+const SAVERS_COMPONENTS: ClassSaver<Constr>[] = [
+    ClassSaver.none('ParticlePos', ParticlePos),
+    ClassSaver.none('ParticleLifetime', ParticleLifetime),
+    ClassSaver.none('ParticleExplosion', ParticleExplosion),
     ClassSaver.basic('TilePos', TilePos, () => new TilePos(0, 0), ['x', 'y']),
     ClassSaver.basic('TileType', TileType, () => new TileType(''), ['weakType', 'strongType']),
     ClassSaver.basic(
@@ -177,26 +211,45 @@ export function saveGameRaw(game: Game): any {
         saveDate: new Date(),
         resources: Object.fromEntries(
             game.world.resources
-                .entries()
-                .map(([resourceConstructor, resource]) => {
-                    const SAVER = SAVERS.find((SAVER) => SAVER.constr == resourceConstructor);
-                    if (!SAVER) return null;
+                .iter()
+                .map((resource) => {
+                    const SAVER = SAVERS_RESOURCES.find(
+                        (SAVER) => SAVER.constr == resource.constructor
+                    );
+                    if (!SAVER) {
+                        console.warn(
+                            `No saver for resource "${resource.constructor.name}"`,
+                            resource
+                        );
+                        return null;
+                    }
                     return [SAVER.name, SAVER.save(resource as any)];
                 })
                 .filter(notNull)
+                .filter(([_, v]) => v !== SAVER_NONE)
                 .toArray()
         ),
-        entities: game.world.entities
-            .values()
+        entities: game.world.components
+            .iterRawEntities()
             .map((entity) => {
                 const entries = entity
                     .values()
                     .map((component) => {
-                        const SAVER = SAVERS.find((SAVER) => SAVER.constr == component.constructor);
-                        if (!SAVER) return null;
+                        const SAVER = SAVERS_COMPONENTS.find(
+                            (SAVER) => SAVER.constr == component.constructor
+                        );
+                        if (!SAVER) {
+                            console.warn(
+                                `No saver for component "${component.constructor.name}"`,
+                                entity,
+                                component
+                            );
+                            return null;
+                        }
                         return [SAVER.name, SAVER.save(component as any)];
                     })
                     .filter(notNull)
+                    .filter(([_, v]) => v !== SAVER_NONE)
                     .toArray();
                 if (entries.length == 0) return null;
                 return Object.fromEntries(entries);
@@ -212,12 +265,12 @@ export function loadGameRaw(v: any): Game {
         string,
         { [key: string]: any }
     ][]) {
-        const SAVER = SAVERS.find((SAVER) => SAVER.name == resourceName);
+        const SAVER = SAVERS_RESOURCES.find((SAVER) => SAVER.name == resourceName);
         if (!SAVER) {
             throw new Error(`Could not load resource "${resourceName}"`);
         }
         const loadedResource = SAVER.load(resource);
-        game.world.setResource(loadedResource);
+        game.world.resources.set(loadedResource);
     }
     for (const entity of v.entities) {
         const loadedComponents = [];
@@ -225,14 +278,14 @@ export function loadGameRaw(v: any): Game {
             string,
             { [key: string]: any }
         ][]) {
-            const SAVER = SAVERS.find((SAVER) => SAVER.name == componentName);
+            const SAVER = SAVERS_COMPONENTS.find((SAVER) => SAVER.name == componentName);
             if (!SAVER) {
                 throw new Error(`Could not load component "${componentName}"`);
             }
             const loadedComponent = SAVER.load(component);
             loadedComponents.push(loadedComponent);
         }
-        game.world.addEntity(loadedComponents);
+        game.world.components.add(loadedComponents);
     }
     game.saveDate = new Date(v.saveDate);
     return game;

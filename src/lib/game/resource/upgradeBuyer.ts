@@ -29,7 +29,7 @@ function upgradesBasicCellPowerGeneration(
 ): Upgrade {
     return new Upgrade(
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return {
                 name: `${type} Cell Power Generation`,
                 description: `Increases the base ${type} Cell power generation by +100% per level`,
@@ -40,7 +40,7 @@ function upgradesBasicCellPowerGeneration(
             };
         },
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             upgrades.basicGenerator[type].powerGeneration++;
         }
     );
@@ -52,7 +52,7 @@ function upgradesBasicCellDurability(
 ): Upgrade {
     return new Upgrade(
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return {
                 name: `${type} Cell Durability`,
                 description: `${type} Cells last *200% per level`,
@@ -63,7 +63,7 @@ function upgradesBasicCellDurability(
             };
         },
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             upgrades.basicGenerator[type].durability++;
         }
     );
@@ -75,7 +75,7 @@ function upgradesBasicCellAutoReplace(
 ): Upgrade {
     return new Upgrade(
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return {
                 name: `Perpetual ${type} Cells`,
                 description: `Auto replace ${type} Cells when they become depleted`,
@@ -86,7 +86,7 @@ function upgradesBasicCellAutoReplace(
             };
         },
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             upgrades.basicGenerator[type].autoReplace = true;
         }
     );
@@ -119,7 +119,7 @@ const UPGRADES = {
     ),
     vent_efficiency: new Upgrade(
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return {
                 name: `Efficient Vents`,
                 description: `Increases vent amount by +100% per level`,
@@ -129,7 +129,7 @@ const UPGRADES = {
             };
         },
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             upgrades.ventEfficiency++;
         }
     )
@@ -139,7 +139,7 @@ export class UpgradeBuyer extends EventDispatcher<{ update: null }> {
     public static readonly UPGRADES = UPGRADES;
 
     public tryBuyUpgrade(game: Game, identifier: keyof (typeof UpgradeBuyer)['UPGRADES']): void {
-        const reactor = game.world.getResource(Reactor);
+        const reactor = game.world.resources.get(Reactor);
         const upgrade = UpgradeBuyer.UPGRADES[identifier];
         const info = upgrade.info(game);
         if (info.buyable === false) return;

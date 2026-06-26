@@ -6,4 +6,4 @@ An incremental game based off of [Reactor Incremental](https://www.kongregate.co
 
 Everything in this repo is licensed under [GPL-3.0](/LICENSE)<br />
 except wherever it is explicitly stated otherwise:<br />
-[src/lib/ecs.ts](/src/lib/ecs.ts) is under [MIT-0](/src/lib/ecs.ts)<br />
+[src/lib/ecs/](/src/lib/ecs/) is under [MIT-0](/src/lib/ecs/LICENSE)<br />

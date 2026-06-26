@@ -21,7 +21,7 @@ export class Reactor {
     }
 
     public sellPower(world: World): void {
-        const stats = world.getResource(Stats);
+        const stats = world.resources.get(Stats);
         if (this.power > this.maxPower) {
             this.power = this.maxPower;
         }

@@ -4,8 +4,8 @@
     import { TickManager } from '../resource/tickManager.ts';
 
     let { game }: { game: Game } = $props();
-    let reactor = $derived(game.world.getResource(Reactor));
-    let tickManager = $derived(game.world.getResource(TickManager));
+    let reactor = $derived(game.world.resources.get(Reactor));
+    let tickManager = $derived(game.world.resources.get(TickManager));
 </script>
 
 <div class="flex flex-col">
@@ -36,7 +36,7 @@
         >
             Infinite Extra Ticks
         </button>
-        <button
+        <!-- <button
             class="button px-2"
             onclick={() => {
                 game.world.queryEntities([]).forEach((entity) => entity.destroy());
@@ -48,6 +48,6 @@
             }}
         >
             Clear Entities
-        </button>
+        </button> -->
     </span>
 </div>

@@ -28,7 +28,9 @@ export class TilePos {
     }
 
     public queryOnPos<const T extends ComponentConstructor[]>(components: T): Query<T> {
-        return this.queryWithinDistance(components, 0, false);
+        return new Query(components).filter([TilePos], (pos) => {
+            return this.eq(pos);
+        });
     }
 }
 

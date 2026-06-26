@@ -1,0 +1,12 @@
+{
+    "name": "ecs",
+    "type": "module",
+    "description": "Simple ECS for TypeScript",
+    "version": "1.0.0",
+    "license": "MIT-0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Vulae/reactor"
+    },
+    "main": "index.ts"
+}

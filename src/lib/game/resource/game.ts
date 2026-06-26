@@ -1,5 +1,4 @@
 import { dev } from '$app/environment';
-import { System, World } from '$lib/ecs';
 import { EventDispatcher } from '$lib/eventDispatcher';
 import { ATLAS } from '../textures';
 import { GameCursor } from './cursor';
@@ -29,6 +28,7 @@ import {
     SYSTEM_RENDER_SPRITE
 } from '../system/tile/render';
 import { Stats } from './stats';
+import { System, World } from '$lib/ecs';
 
 const CREATE_SYSTEMS = () => ({
     setup: [
@@ -118,28 +118,27 @@ export class Game extends EventDispatcher<{
                 resourceAllowOverwrite: true,
                 entityComponentAppendAllowOverwrite: true,
                 entityComponentRemoveRequired: false,
-                entityWithZeroComponentsAllowed: false,
-                entityAddComponentPrototypes: false
+                entityWithZeroComponentsAllowed: false
             },
             CREATE_SYSTEMS()
         );
 
-        this.world.setResource(this);
+        this.world.resources.set(this);
 
-        this.world.setResource(new FrameInfo());
+        this.world.resources.set(new FrameInfo());
 
-        this.world.setResource(new GameRenderOptions());
+        this.world.resources.set(new GameRenderOptions());
 
-        this.world.setResource(new GameCursor());
-        this.world.setResource(new ComponentPlacer());
-        this.world.setResource(new UpgradeBuyer());
+        this.world.resources.set(new GameCursor());
+        this.world.resources.set(new ComponentPlacer());
+        this.world.resources.set(new UpgradeBuyer());
 
-        this.world.setResource(new Stats());
+        this.world.resources.set(new Stats());
 
-        this.world.setResource(new Reactor());
-        this.world.setResource(new Upgrades());
+        this.world.resources.set(new Reactor());
+        this.world.resources.set(new Upgrades());
 
-        this.world.setResource(new TickManager());
+        this.world.resources.set(new TickManager());
     }
 
     private cacheCanvas: HTMLCanvasElement | null = null;
@@ -152,7 +151,7 @@ export class Game extends EventDispatcher<{
             throw new Error("Your browser or machine doesn't support canvas rendering context 2d");
         }
         this.cacheCanvas = canvas;
-        this.world.setResource(ctx);
+        this.world.resources.set(ctx);
     }
 
     private tickRerender: boolean = true;

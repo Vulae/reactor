@@ -36,7 +36,7 @@ export class ParticleLifetime {
 
 export class ParticleExplosion {
     public static create(world: World, pos: ParticlePos): void {
-        world.addEntity([pos, new ParticleLifetime(500), new ParticleExplosion()]);
+        world.components.add([pos, new ParticleLifetime(500), new ParticleExplosion()]);
     }
 
     public static readonly SYSTEM_RENDER = new System(

@@ -8,7 +8,7 @@
     import { formatMoney } from './util';
 
     let { game }: { game: Game } = $props();
-    let placer = $derived(game.world.getResource(ComponentPlacer));
+    let placer = $derived(game.world.resources.get(ComponentPlacer));
 
     let rerender: number = $state(1);
 

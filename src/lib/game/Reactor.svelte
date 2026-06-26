@@ -6,8 +6,8 @@
     import { Stats } from './resource/stats';
 
     let { game }: { game: Game } = $props();
-    let reactor = $derived(game.world.getResource(Reactor));
-    let stats = $derived(game.world.getResource(Stats));
+    let reactor = $derived(game.world.resources.get(Reactor));
+    let stats = $derived(game.world.resources.get(Stats));
 
     let tick: number = $state(0);
     let tickListener: number = -1;

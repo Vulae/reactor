@@ -7,7 +7,7 @@
     import { ATLAS } from './textures';
 
     let { game }: { game: Game } = $props();
-    let tickManager = $derived(game.world.getResource(TickManager));
+    let tickManager = $derived(game.world.resources.get(TickManager));
 
     let rerender = $state(1);
     let tickListener: number = -1;

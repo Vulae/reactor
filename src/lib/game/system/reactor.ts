@@ -23,7 +23,7 @@ export const SYSTEM_TICK_REACTOR = new System([World, Reactor, Stats], (world, r
     stats.totalHeatDissipatedThisReset += sub;
 
     if (reactor.isOverheating()) {
-        const entities = world.queryEntities([TilePos]);
+        const entities = world.components.entities([TilePos]);
         for (const entity of entities) {
             const [pos] = entity.components;
             entity.with([TileDurability], (durability) => {

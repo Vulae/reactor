@@ -6,7 +6,7 @@
 
     let { game }: { game: Game } = $props();
     let rerender: number = $state(1);
-    let stats = $derived(game.world.getResource(Stats));
+    let stats = $derived(game.world.resources.get(Stats));
 
     let tickListener: number = -1;
 

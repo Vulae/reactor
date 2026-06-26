@@ -44,7 +44,7 @@ function placerBasicCell(
 ): Placer {
     return new Placer(
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return {
                 name: `${['Singular', 'Double', 'Quadruple'][tier]} ${type} Cell`,
                 description: `Generates ${upgrades.getBasicGeneratorPowerGeneration(type, tier)} power and ${upgrades.getBasicGeneratorHeatGeneration(type, tier)} heat for ${upgrades.getBasicGeneratorDurability(type)} ticks`,
@@ -55,7 +55,7 @@ function placerBasicCell(
             };
         },
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             const durability = upgrades.getBasicGeneratorDurability(type);
             return [
                 new TileType('cell', strongType),
@@ -74,7 +74,7 @@ function placerBasicVent(
 ): Placer {
     return new Placer(
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return {
                 name: `${type} Heat Vent`,
                 description: `Dissipates ${upgrades.getBasicVentHeatVentAmount(type)} heat per tick and holds ${upgrades.getBasicVentMaxHeat(type)} heat`,
@@ -85,7 +85,7 @@ function placerBasicVent(
             };
         },
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return [
                 new TileType('vent', strongType),
                 new TileBasicSprite(texture),
@@ -103,7 +103,7 @@ function placerBasicCapacitor(
 ): Placer {
     return new Placer(
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return {
                 name: `${type} Capacitor`,
                 description: `Increases total power storage of the reactor by ${upgrades.getBasicCapacitorPowerStorage(type)}`,
@@ -114,7 +114,7 @@ function placerBasicCapacitor(
             };
         },
         (game) => {
-            const upgrades = game.world.getResource(Upgrades);
+            const upgrades = game.world.resources.get(Upgrades);
             return [
                 new TileType('capacitor', strongType),
                 new TileBasicSprite(texture),

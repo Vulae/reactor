@@ -40,7 +40,7 @@ export class GameCursor {
         if (!this.pos) {
             return null;
         }
-        const entities = world.queryEntities(this.pos.queryOnPos([TilePos]));
+        const entities = world.components.entities(this.pos.queryOnPos([TilePos]));
         if (entities.length > 1) {
             console.warn(
                 `GameCursor.getTile: Multiple entities at the same position: ${this.pos.x}, ${this.pos.y} `,
@@ -56,18 +56,18 @@ export class GameCursor {
         tile: Component[],
         overwriteType?: string
     ): boolean {
-        const reactor = game.world.getResource(Reactor);
+        const reactor = game.world.resources.get(Reactor);
         if (!reactor.containsPos(pos) || reactor.isOverheating()) {
             return false;
         }
         // If component at position is ghost
-        game.world
-            .queryEntities(pos.queryOnPos([]).join(TileDurability.queryIsDead(true, [])))
+        game.world.components
+            .entities(pos.queryOnPos([]).join(TileDurability.queryIsDead(true, [])))
             .forEach((entity) => entity.destroy());
         // If component at position is overwritable
         if (overwriteType !== undefined) {
-            game.world
-                .queryEntities(
+            game.world.components
+                .entities(
                     pos
                         .queryOnPos([])
                         .filter(
@@ -78,17 +78,17 @@ export class GameCursor {
                 .forEach((entity) => entity.destroy());
         }
         // If component at position already exists
-        if (game.world.queryEntities(pos.queryOnPos([])).length > 0) {
+        if (game.world.components.entities(pos.queryOnPos([])).length > 0) {
             return false;
         }
-        game.world.addEntity([pos, ...tile]);
+        game.world.components.add([pos, ...tile]);
         return true;
     }
 
     private tryBuy(game: Game, pos: TilePos): void {
-        const placer = game.world.getResource(ComponentPlacer);
+        const placer = game.world.resources.get(ComponentPlacer);
         if (!placer.selected) return;
-        const reactor = game.world.getResource(Reactor);
+        const reactor = game.world.resources.get(Reactor);
         const selectedPlacer = ComponentPlacer.COMPONENTS[placer.selected];
         const selectedPlacerInfo = selectedPlacer.info(game);
         if (reactor.money < selectedPlacerInfo.cost) return;

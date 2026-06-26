@@ -5,8 +5,8 @@
     import { formatMoney } from './util';
 
     let { game }: { game: Game } = $props();
-    let reactor = $derived(game.world.getResource(Reactor));
-    let stats = $derived(game.world.getResource(Stats));
+    let reactor = $derived(game.world.resources.get(Reactor));
+    let stats = $derived(game.world.resources.get(Stats));
 
     let rerender = $state(1);
     let tickListener: number = -1;

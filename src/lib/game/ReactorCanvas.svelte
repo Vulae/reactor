@@ -7,8 +7,8 @@
     import { TilePos } from './component/tile/base';
 
     let { game, isStatic = false }: { game: Game; isStatic?: boolean } = $props();
-    let reactor = $derived(game.world.getResource(Reactor));
-    let cursor = $derived(game.world.getResource(GameCursor));
+    let reactor = $derived(game.world.resources.get(Reactor));
+    let cursor = $derived(game.world.resources.get(GameCursor));
 
     let canvas: HTMLCanvasElement | null = $state(null);
 

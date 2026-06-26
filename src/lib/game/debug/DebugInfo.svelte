@@ -5,8 +5,8 @@
     import { saveGameRaw } from '../save';
 
     let { game }: { game: Game } = $props();
-    let frameInfo = $derived(game.world.getResource(FrameInfo));
-    let tickManager = $derived(game.world.getResource(TickManager));
+    let frameInfo = $derived(game.world.resources.get(FrameInfo));
+    let tickManager = $derived(game.world.resources.get(TickManager));
 
     let frame: number = $state(0);
     let frameListener: number = -1;
@@ -36,6 +36,8 @@
             }}>Log Save Game</button
         ><br />
         {#key frame}
+            {@const { numEntities, numComponents } = game.world.components.__DEBUG_INFO()}
+            {@const { numResources } = game.world.resources.__DEBUG_INFO()}
             Frame: {frameInfo.numFrames}
             <br />
             FPS: {frameInfo.fps}
@@ -45,11 +47,9 @@
             DeltaTime: {Math.floor(frameInfo.dt * 10) / 10}ms
             <br />
             <br />
-            Entities: {game.world.entities.size} ({game.world.entities
-                .values()
-                .reduce((count, entity) => count + entity.size, 0)})
+            Entities: {numEntities} ({numComponents})
             <br />
-            Resources: {game.world.resources.size}
+            Resources: {numResources}
             <br />
             Tick: {tickManager.numTicks}
         {/key}

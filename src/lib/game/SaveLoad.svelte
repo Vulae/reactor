@@ -110,8 +110,8 @@
 <AlertWindow bind:open={loadConfirmationWindow} title="Load Save" gradientStart="black">
     {#if loadConfirmationLoadGame}
         {@const loadGame = loadConfirmationLoadGame}
-        {@const reactor = loadGame.world.getResource(Reactor)}
-        {@const tickManager = loadGame.world.getResource(TickManager)}
+        {@const reactor = loadGame.world.resources.get(Reactor)}
+        {@const tickManager = loadGame.world.resources.get(TickManager)}
         <div class="flex max-w-80 flex-col gap-1">
             <span class="text-center">Are you sure you want to load save?</span>
             <hr />
