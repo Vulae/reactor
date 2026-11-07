@@ -1,4 +1,4 @@
-import { System, type Component, type Entity, type World } from '$lib/ecs';
+import { System, type Component, type Entity, type World } from '#lib/ecs/index.ts';
 import { TileDurability, TileType, TilePos } from '../component/tile/base';
 import { ATLAS } from '../textures';
 import { ComponentPlacer } from './componentPlacer';

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { updateOn } from '$lib/util';
+    import { updateOn } from '#lib/util.ts';
     import type { Game } from './resource/game';
     import { Stats } from './resource/stats';
     import { formatMoney } from './util';

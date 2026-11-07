@@ -1,11 +1,11 @@
 <script lang="ts">
-    import MouseTooltip from '$lib/MouseTooltip.svelte';
-    import TextureAtlasImage from '$lib/TextureAtlasImage.svelte';
-    import { updateOn } from '$lib/util';
-    import { ComponentPlacer } from './resource/componentPlacer';
-    import type { Game } from './resource/game';
-    import { ATLAS } from './textures';
-    import { formatMoney } from './util';
+    import MouseTooltip from '#lib/MouseTooltip.svelte';
+    import TextureAtlasImage from '#lib/TextureAtlasImage.svelte';
+    import { updateOn } from "#lib/util.ts";
+    import { ComponentPlacer } from '#game/resource/componentPlacer.ts';
+    import type { Game } from '#game/resource/game.ts';
+    import { ATLAS } from '#game/textures.ts';
+    import { formatMoney } from '#game/util.ts';
 
     let { game }: { game: Game } = $props();
     let placer = $derived(game.world.resources.get(ComponentPlacer));

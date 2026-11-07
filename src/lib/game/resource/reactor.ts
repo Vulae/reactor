@@ -1,4 +1,4 @@
-import type { World } from '$lib/ecs';
+import type { World } from '#lib/ecs/index.ts';
 import type { TilePos } from '../component/tile/base';
 import { Stats } from './stats';
 

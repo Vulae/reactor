@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Micro+5&display=swap');
+
+@import 'tailwindcss';
+
+@utility font-jersey {
+    font-family: 'Jersey 10', sans-serif;
+}
+
+@utility font-micro {
+    font-family: 'Micro 5', sans-serif;
+}
+
+@utility shadow-outline-up {
+    @apply shadow;
+    --tw-shadow:
+        inset -1px -1px var(--color-zinc-900), inset 1px 1px var(--color-zinc-200),
+        inset -2px -2px var(--color-zinc-500), inset 2px 2px var(--color-white);
+}
+
+@utility shadow-outline-down {
+    @apply shadow;
+    --tw-shadow:
+        inset 1px 1px var(--color-zinc-900), inset -1px -1px var(--color-zinc-200),
+        inset 2px 2px var(--color-zinc-500), inset -2px -2px var(--color-white);
+}
+
+* {
+    @apply leading-4;
+}
+
+body {
+    @apply min-h-screen min-w-screen overflow-hidden;
+    @apply bg-black;
+    @apply font-micro text-lg;
+
+    text-rendering: geometricPrecision;
+    font-kerning: none;
+    user-select: none;
+    image-rendering: pixelated;
+}
+
+.force-overlap {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    grid-template-rows: repeat(1, minmax(0, 1fr));
+    & > * {
+        grid-column-start: 1;
+        grid-column-end: 1;
+        grid-row-start: 1;
+        grid-row-end: 1;
+    }
+}
+
+.button {
+    @apply shadow-outline-up cursor-pointer bg-zinc-300;
+    &:hover:not(:disabled) {
+        @apply bg-zinc-200;
+    }
+    &:active {
+        @apply cursor-grabbing;
+    }
+    &:disabled {
+        @apply cursor-not-allowed;
+    }
+    &:active,
+    &:disabled,
+    &.button-active {
+        @apply shadow-outline-down;
+    }
+}
+
+.arrow-hide {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        display: none;
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+.checkbox {
+    @apply relative size-[0.8em] cursor-pointer appearance-none;
+
+    &::before {
+        content: '';
+        @apply shadow-outline-down absolute block size-[0.8em] bg-white;
+    }
+    &:checked::after {
+        content: 'X';
+        @apply absolute size-[0.8em] text-center align-middle;
+        @apply left-0.25;
+    }
+}
+
+a {
+    @apply text-purple-600;
+    &:visited {
+        @apply text-purple-800;
+    }
+    &:hover {
+        @apply underline;
+    }
+} 

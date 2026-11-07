@@ -1,11 +1,11 @@
-import { System } from '$lib/ecs';
-import { TileCapacitor, TileDurability, TileHeatable } from '$lib/game/component/tile/base';
+import { System } from '#lib/ecs/index.ts';
+import { TileCapacitor, TileDurability, TileHeatable } from '#lib/game/component/tile/base.ts';
 import {
     TileBasicCapacitor,
     TileBasicGenerator,
     TileBasicHeatVent
-} from '$lib/game/component/tile/basic';
-import { Upgrades } from '$lib/game/resource/upgrades';
+} from '#lib/game/component/tile/basic.ts';
+import { Upgrades } from '#lib/game/resource/upgrades.ts';
 
 export const SYSTEM_SETUP_BASIC_GENERATOR = new System(
     [Upgrades, [TileBasicGenerator, TileDurability]],

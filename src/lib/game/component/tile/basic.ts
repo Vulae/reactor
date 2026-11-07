@@ -1,4 +1,4 @@
-import type { Upgrades } from '$lib/game/resource/upgrades';
+import type { Upgrades } from '#lib/game/resource/upgrades.ts';
 
 export enum TileBasicGeneratorType {
     Uranium = 'Uranium',

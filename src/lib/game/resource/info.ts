@@ -1,4 +1,4 @@
-import { System } from '$lib/ecs';
+import { System } from '#lib/ecs/index.ts';
 
 export class FrameInfo {
     private _numFrames: number = 0;

@@ -1,6 +1,6 @@
-import { System, World } from '$lib/ecs';
-import { FrameInfo } from '$lib/game/resource/info';
-import { ATLAS_EXPLOSION } from '$lib/game/textures';
+import { System, World } from '#lib/ecs/index.ts';
+import { FrameInfo } from '#lib/game/resource/info.ts';
+import { ATLAS_EXPLOSION } from '#lib/game/textures.ts';
 
 export class ParticlePos {
     public x: number;

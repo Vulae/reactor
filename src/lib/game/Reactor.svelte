@@ -1,9 +1,13 @@
 <script lang="ts">
     import { Reactor } from './resource/reactor';
-    import { clamp } from '$lib/util';
+    import { clamp } from '#lib/util.ts';
     import type { Game } from './resource/game';
     import ReactorCanvas from './ReactorCanvas.svelte';
     import { Stats } from './resource/stats';
+    import ImgProgressHeatInactive from "#lib/assets/progress-heat-inactive.png";
+    import ImgProgressHeatActive from "#lib/assets/progress-heat-active.png";
+    import ImgProgressPowerInactive from "#lib/assets/progress-power-inactive.png";
+    import ImgProgressPowerActive from "#lib/assets/progress-power-active.png";
 
     let { game }: { game: Game } = $props();
     let reactor = $derived(game.world.resources.get(Reactor));
@@ -34,7 +38,10 @@
     <!-- The buttons cannot have the progress bar as a child because when the progress bar updates it resets any current interaction with the button. -->
     <div class="force-overlap">
         {#key tick}
-            <progress class="reactor-heat-progress w-full" value={reactor.heat / reactor.maxHeat}
+            <progress
+                class="w-full custom-progress"
+                style="--inactive-image: url('{ImgProgressHeatInactive}'); --active-image: url('{ImgProgressHeatActive}')"
+                value={reactor.heat / reactor.maxHeat}
             ></progress>
             <div class="flex items-center justify-between px-2">
                 <span class="text-white">
@@ -60,7 +67,10 @@
     </div>
     <div class="force-overlap">
         {#key tick}
-            <progress class="reactor-power-progress w-full" value={reactor.power / reactor.maxPower}
+            <progress
+                class="w-full custom-progress"
+                style="--inactive-image: url('{ImgProgressPowerInactive}'); --active-image: url('{ImgProgressPowerActive}')"
+                value={reactor.power / reactor.maxPower}
             ></progress>
             <div class="flex items-center justify-between px-2">
                 <span class="text-white">
@@ -81,30 +91,12 @@
     <ReactorCanvas {game} />
 </div>
 
-<style lang="scss">
-    .reactor-heat-progress {
-        background-image: url('$lib/assets/progress-heat-inactive.png');
-    }
-    .reactor-heat-progress::-webkit-progress-bar {
-        background-image: url('$lib/assets/progress-heat-inactive.png');
-    }
-    .reactor-heat-progress::-webkit-progress-value {
-        background-image: url('$lib/assets/progress-heat-active.png');
-    }
-    .reactor-heat-progress::-moz-progress-bar {
-        background-image: url('$lib/assets/progress-heat-active.png');
+<style>
+    .custom-progress, .custom-progress::-webkit-progress-bar {
+        background-image: var(--inactive-image);
     }
 
-    .reactor-power-progress {
-        background-image: url('$lib/assets/progress-power-inactive.png');
-    }
-    .reactor-power-progress::-webkit-progress-bar {
-        background-image: url('$lib/assets/progress-power-inactive.png');
-    }
-    .reactor-power-progress::-webkit-progress-value {
-        background-image: url('$lib/assets/progress-power-active.png');
-    }
-    .reactor-power-progress::-moz-progress-bar {
-        background-image: url('$lib/assets/progress-power-active.png');
+    .custom-progress::-webkit-progress-value, .custom-progress::-moz-progress-bar {
+        background-image: var(--active-image);
     }
 </style>

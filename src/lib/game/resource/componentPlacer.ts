@@ -1,5 +1,5 @@
-import type { Component } from '$lib/ecs';
-import { EventDispatcher } from '$lib/eventDispatcher';
+import type { Component } from '#lib/ecs/index.ts';
+import { EventDispatcher } from '#lib/eventDispatcher.ts';
 import {
     TileBasicSprite,
     TileCapacitor,

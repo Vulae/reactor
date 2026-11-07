@@ -1,4 +1,4 @@
-import { notNull } from '$lib/util';
+import { notNull } from '#lib/util.ts';
 import { Game } from './resource/game';
 import { Reactor } from './resource/reactor';
 
@@ -22,7 +22,7 @@ import {
     TileBasicHeatVent
 } from './component/tile/basic';
 import { Stats } from './resource/stats';
-import { World } from '$lib/ecs';
+import { World } from '#lib/ecs/index.ts';
 import { FrameInfo } from './resource/info';
 import { GameRenderOptions } from './resource/options';
 import { GameCursor } from './resource/cursor';

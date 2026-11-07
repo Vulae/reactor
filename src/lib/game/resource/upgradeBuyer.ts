@@ -1,4 +1,4 @@
-import { EventDispatcher } from '$lib/eventDispatcher';
+import { EventDispatcher } from '#lib/eventDispatcher.ts';
 import { TileBasicGeneratorType } from '../component/tile/basic';
 import type { ATLAS } from '../textures';
 import type { Game } from './game';

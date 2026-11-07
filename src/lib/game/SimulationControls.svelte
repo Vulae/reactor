@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { IntervalCaller } from '$lib/util';
+    import { IntervalCaller } from '#lib/util.ts';
     import { onMount } from 'svelte';
     import type { Game } from './resource/game';
     import { TickManager } from './resource/tickManager';
-    import TextureAtlasImage from '$lib/TextureAtlasImage.svelte';
+    import TextureAtlasImage from '#lib/TextureAtlasImage.svelte';
     import { ATLAS } from './textures';
 
     let { game }: { game: Game } = $props();

@@ -3,7 +3,7 @@
     import { GameCursor } from './resource/cursor';
     import type { Game } from './resource/game';
     import { Reactor } from './resource/reactor';
-    import { RenderFrameCaller } from '$lib/util';
+    import { RenderFrameCaller } from '#lib/util.ts';
     import { TilePos } from './component/tile/base';
 
     let { game, isStatic = false }: { game: Game; isStatic?: boolean } = $props();

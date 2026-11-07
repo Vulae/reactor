@@ -1,5 +1,5 @@
-import { System, World } from '$lib/ecs';
-import { clamp } from '$lib/util';
+import { System, World } from '#lib/ecs/index.ts';
+import { clamp } from '#lib/util.ts';
 import { ParticleExplosion, ParticlePos } from '../component/particle';
 import { TileCapacitor, TileDurability, TilePos } from '../component/tile/base';
 import { Reactor } from '../resource/reactor';

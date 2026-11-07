@@ -1,5 +1,5 @@
-import { TextureAtlas, TextureAtlasAnimation } from '$lib/textureAtlas';
-import ATLAS_IMAGE from '$lib/assets/tileset.png';
+import { TextureAtlas, TextureAtlasAnimation } from '#lib/textureAtlas.ts';
+import ATLAS_IMAGE from '#lib/assets/tileset.png';
 
 export const TILE_SIZE = 32;
 

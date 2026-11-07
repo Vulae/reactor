@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { TextureAtlas } from '$lib/textureAtlas';
+    import type { TextureAtlas } from '#lib/textureAtlas.ts';
     import { onDestroy, onMount } from 'svelte';
 
     let { atlas }: { atlas: TextureAtlas<any> } = $props();

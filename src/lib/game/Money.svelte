@@ -15,7 +15,7 @@
         tickListener = game.addEventListener('tickRender', () => {
             rerender++;
         }).id;
-        () => {
+        return () => {
             game.removeEventListener(tickListener);
         };
     });
@@ -23,7 +23,7 @@
     let scrounge = $derived(rerender && reactor.money < 100);
 </script>
 
-<div class="flex w-36 justify-between">
+<div class="flex w-40 justify-between items-center">
     <span class="font-jersey text-2xl">
         {#key rerender}
             ${formatMoney(reactor.money)}
@@ -36,7 +36,7 @@
                 stats.totalMoneyGainedThisReset++;
                 game.setTickRerender();
             }}
-            class="button px-2">Scrounge for $1</button
+            class="button px-2 h-6">Scrounge for $1</button
         >
     {/if}
 </div>

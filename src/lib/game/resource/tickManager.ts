@@ -1,4 +1,4 @@
-import { System } from '$lib/ecs';
+import { System } from '#lib/ecs/index.ts';
 
 const GIVE_EXTRATICKS_DELAY: number = 1000 * 60;
 

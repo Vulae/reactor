@@ -1,5 +1,5 @@
 <script lang="ts">
-    import AlertWindow from '$lib/AlertWindow.svelte';
+    import AlertWindow from '#lib/AlertWindow.svelte';
     import { Game } from './resource/game';
     import { saveGame } from './save';
 

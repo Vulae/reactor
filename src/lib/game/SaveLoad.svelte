@@ -1,14 +1,14 @@
 <script lang="ts">
-    import MouseTooltip from '$lib/MouseTooltip.svelte';
+    import MouseTooltip from '#lib/MouseTooltip.svelte';
     import { onMount } from 'svelte';
     import type { Game } from './resource/game';
     import { loadGame, saveGame } from './save';
-    import AlertWindow from '$lib/AlertWindow.svelte';
+    import AlertWindow from '#lib/AlertWindow.svelte';
     import ReactorCanvas from './ReactorCanvas.svelte';
     import { Reactor } from './resource/reactor';
     import { TickManager } from './resource/tickManager';
     import { formatMoney } from './util';
-    import { updateOn } from '$lib/util';
+    import { updateOn } from '#lib/util.ts';
 
     let { game = $bindable() }: { game: Game } = $props();
 

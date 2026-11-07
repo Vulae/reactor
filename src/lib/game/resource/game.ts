@@ -1,5 +1,4 @@
-import { dev } from '$app/environment';
-import { EventDispatcher } from '$lib/eventDispatcher';
+import { EventDispatcher } from '#lib/eventDispatcher.ts';
 import { ATLAS } from '../textures';
 import { GameCursor } from './cursor';
 import { TickManager } from './tickManager';
@@ -28,7 +27,8 @@ import {
     SYSTEM_RENDER_SPRITE
 } from '../system/tile/render';
 import { Stats } from './stats';
-import { System, World } from '$lib/ecs';
+import { System, World } from '#lib/ecs/index.ts';
+import { dev } from '$app/env';
 
 const CREATE_SYSTEMS = () => ({
     setup: [

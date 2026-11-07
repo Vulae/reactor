@@ -1,6 +1,6 @@
 <script lang="ts">
     import Window from '../Window.svelte';
-    import BackgroundPng from '$lib/assets/background.png';
+    import BackgroundPng from '#lib/assets/background.png';
     import Reactor from './Reactor.svelte';
     import DebugInfo from './debug/DebugInfo.svelte';
     import TilesetAtlas from './debug/TilesetAtlas.svelte';

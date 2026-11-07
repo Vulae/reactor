@@ -1,7 +1,7 @@
 <script lang="ts">
-    import MouseTooltip from '$lib/MouseTooltip.svelte';
-    import TextureAtlasImage from '$lib/TextureAtlasImage.svelte';
-    import { updateOn } from '$lib/util';
+    import MouseTooltip from '#lib/MouseTooltip.svelte';
+    import TextureAtlasImage from '#lib/TextureAtlasImage.svelte';
+    import { updateOn } from '#lib/util.ts';
     import type { Game } from './resource/game';
     import { UpgradeBuyer } from './resource/upgradeBuyer';
     import { ATLAS } from './textures';

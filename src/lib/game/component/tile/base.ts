@@ -1,5 +1,5 @@
-import { Query, type ComponentConstructor } from '$lib/ecs';
-import type { ATLAS } from '$lib/game/textures';
+import { Query, type ComponentConstructor } from '#lib/ecs/index.ts';
+import type { ATLAS } from '#lib/game/textures.ts';
 
 export class TilePos {
     public x: number;

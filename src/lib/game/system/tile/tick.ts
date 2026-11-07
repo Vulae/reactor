@@ -1,11 +1,11 @@
-import { System, World } from '$lib/ecs';
-import { ParticleExplosion, ParticlePos } from '$lib/game/component/particle';
-import { TileDurability, TileHeatable, TilePos } from '$lib/game/component/tile/base';
-import { TileBasicGenerator, TileBasicHeatVent } from '$lib/game/component/tile/basic';
-import { Reactor } from '$lib/game/resource/reactor';
-import { Stats } from '$lib/game/resource/stats';
-import { Upgrades } from '$lib/game/resource/upgrades';
-import { clamp } from '$lib/util';
+import { System, World } from '#lib/ecs/index.ts';
+import { ParticleExplosion, ParticlePos } from '#lib/game/component/particle.ts';
+import { TileDurability, TileHeatable, TilePos } from '#lib/game/component/tile/base.ts';
+import { TileBasicGenerator, TileBasicHeatVent } from '#lib/game/component/tile/basic.ts';
+import { Reactor } from '#lib/game/resource/reactor.ts';
+import { Stats } from '#lib/game/resource/stats.ts';
+import { Upgrades } from '#lib/game/resource/upgrades.ts';
+import { clamp } from '#lib/util.ts';
 
 export const SYSTEM_TICK_HEATABLE = (() =>
     new System([World, Reactor, [TileHeatable, TilePos]], (world, reactor, entities) => {

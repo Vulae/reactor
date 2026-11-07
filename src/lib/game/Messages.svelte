@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Window from '$lib/Window.svelte';
+    import Window from '#lib/Window.svelte';
     import type { AnnounceMessage, Game } from './resource/game';
 
     let { game }: { game: Game } = $props();
