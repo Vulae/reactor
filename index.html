@@ -3,38 +3,42 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="text-scale" content="scale" />
         <link rel="icon" href="/reactor/favicon.svg" />
         <style>
             body {
                 background: black;
             }
         </style>
-        <link href="./_app/immutable/entry/start.CAxk1RY-.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/BHHXWjtS.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/BJ9ofAJ1.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/bG2xxq__.js" rel="modulepreload">
-		<link href="./_app/immutable/entry/app.BBlf4zsJ.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/BxI-9O_V.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/qwODEgdY.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/wUeZXKk5.js" rel="modulepreload">
-		<link href="./_app/immutable/chunks/BPSA_OOQ.js" rel="modulepreload">
+        <link href="./_app/immutable/entry/start.jfI5GJxH.js" rel="modulepreload">
+		<link href="./_app/immutable/entry/payload.DSmR2FwN.js" rel="modulepreload">
+		<link href="./_app/immutable/chunks/DclECHGd.js" rel="modulepreload">
+		<link href="./_app/immutable/chunks/DFxKBE6F.js" rel="modulepreload">
+		<link href="./_app/immutable/chunks/CN2MnlaZ.js" rel="modulepreload">
+		<link href="./_app/immutable/chunks/DLEz5zjy.js" rel="modulepreload">
+		<link href="./_app/immutable/chunks/DYrviY11.js" rel="modulepreload">
+		<link href="./_app/immutable/entry/app.DqnUyUg9.js" rel="modulepreload">
+		<link href="./_app/immutable/nodes/0.mKqz2fdd.js" rel="modulepreload">
+		<link href="./_app/immutable/nodes/2.DHEeV40w.js" rel="modulepreload">
 		
+		<link href="./_app/immutable/assets/0.BoKDvn6X.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/2.B2Ef5exP.css" rel="stylesheet">
     </head>
     <body data-sveltekit-preload-data="hover">
         <div style="display: contents">
 			<script>
 				{
-					__sveltekit_1rmrbum = {
+					__sveltekit_gsfuwg = {
 						base: new URL(".", location).pathname.slice(0, -1),
+						version: "1794093997773",
 						assets: "/reactor"
 					};
 
 					const element = document.currentScript.parentElement;
 
-					Promise.all([
-						import("./_app/immutable/entry/start.CAxk1RY-.js"),
-						import("./_app/immutable/entry/app.BBlf4zsJ.js")
-					]).then(([kit, app]) => {
+					import("./_app/immutable/entry/start.jfI5GJxH.js").then(async (kit) => {
+						kit.init(__sveltekit_gsfuwg);
+						const app = await import("./_app/immutable/entry/app.DqnUyUg9.js");
 						kit.start(app, element);
 					});
 				}
