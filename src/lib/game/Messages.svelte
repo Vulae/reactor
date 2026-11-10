@@ -11,7 +11,7 @@
         announceListener = game.addEventListener('announceMessage', ({ data: message }) => {
             messages.push(message);
         }).id;
-        () => {
+        return () => {
             game.removeEventListener(announceListener);
         };
     });
@@ -37,7 +37,7 @@
 {/snippet}
 
 <div class="flex flex-col items-end gap-2">
-    {#each messages as message, i}
+    {#each messages as message, i (i)}
         {#if message.type == 'message'}
             {@render MessageWindow('Message', 'darkgreen', 'lightgreen', i, message.message)}
         {:else if message.type == 'debug'}

@@ -1,25 +1,14 @@
 import { Entity } from './entity';
 import { Query, type PartialQuery } from './query';
-import { throwConstructedsInvalid, throwConstructorInvalid } from './util';
+import {
+    throwInstancesInvalid,
+    throwConstructorInvalid,
+    type Constructor,
+    type Instance,
+    type InstanceFrom,
+    type InstancesFrom
+} from './util';
 import type { World } from './world';
-
-export interface Component {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    constructor: Function;
-}
-
-export type ComponentConstructor<T extends Component = Component> = new (...args: any[]) => T;
-
-export type ComponentConstructorAsComponent<T extends ComponentConstructor> =
-    T extends ComponentConstructor<infer O> ? O : never;
-
-export type ComponentConstructorsAsComponents<T extends ComponentConstructor[]> = {
-    [K in keyof T]: T[K] extends ComponentConstructor<infer O> ? O : never;
-};
-
-export type ComponentsAsComponentConstructors<T extends Component[]> = {
-    [K in keyof T]: ComponentConstructor<T[K]>;
-};
 
 class Ids {
     private readonly ids: Set<number> = new Set();
@@ -95,28 +84,26 @@ export class ComponentStore {
 
     private readonly ids: Ids = new Ids();
 
-    private readonly components: Map<ComponentConstructor, Map<number, Component>> = new Map();
-    private getComponentsMap<T extends ComponentConstructor>(
-        constructor: T
-    ): Map<number, ComponentConstructorAsComponent<T>> {
+    private readonly components: Map<Constructor, Map<number, Instance>> = new Map();
+    private getComponentsMap<T extends Constructor>(constructor: T): Map<number, InstanceFrom<T>> {
         return this.components.getOrInsertComputed(constructor, () => new Map()) as Map<
             number,
-            ComponentConstructorAsComponent<T>
+            InstanceFrom<T>
         >;
     }
 
     /**
      * Add components to a entity
      */
-    public append<const T extends Component[]>(id: number, components: T): Entity<T> {
+    public append<const T extends Instance[]>(id: number, components: T): Entity<T> {
         if (this.safetyChecks) {
-            throwConstructedsInvalid(components);
+            throwInstancesInvalid(components);
         }
         if (!this.ids.exists(id)) {
             throw new Error(`Entity with id ${id} doesn't exist`);
         }
         for (const component of components) {
-            const map = this.getComponentsMap(component.constructor as ComponentConstructor);
+            const map = this.getComponentsMap(component.constructor as Constructor);
             if (!this.entityComponentAppendAllowOverwrite && map.has(id)) {
                 throw new Error(`Entity already has component "${component.constructor.name}"`);
             }
@@ -128,7 +115,7 @@ export class ComponentStore {
     /**
      * Remove components from a entity
      */
-    public remove<const T extends ComponentConstructor[]>(id: number, components: T): void {
+    public remove<const T extends Constructor[]>(id: number, components: T): void {
         if (this.safetyChecks) {
             for (const constructor of components) {
                 throwConstructorInvalid(constructor);
@@ -154,9 +141,9 @@ export class ComponentStore {
     /**
      * Create a new entity
      */
-    public add<const T extends Component[]>(components: T): Entity<T> {
+    public add<const T extends Instance[]>(components: T): Entity<T> {
         if (this.safetyChecks) {
-            throwConstructedsInvalid(components);
+            throwInstancesInvalid(components);
         }
         if (!this.entityWithZeroComponentsAllowed && components.length == 0) {
             throw new Error('Cannot add entity with no components');
@@ -182,11 +169,11 @@ export class ComponentStore {
         return this.ids.exists(id);
     }
 
-    private entityExtract<const T extends ComponentConstructor[]>(
+    private entityExtract<const T extends Constructor[]>(
         id: number,
         constructors: T
-    ): ComponentConstructorsAsComponents<T> | null {
-        const components: Component[] = [];
+    ): InstancesFrom<T> | null {
+        const components: Instance[] = [];
         for (const constructor of constructors) {
             const map = this.getComponentsMap(constructor);
             const component = map.get(id);
@@ -195,13 +182,13 @@ export class ComponentStore {
             }
             components.push(component);
         }
-        return components as ComponentConstructorsAsComponents<T>;
+        return components as InstancesFrom<T>;
     }
 
-    private entityInner<const T extends ComponentConstructor[]>(
+    private entityInner<const T extends Constructor[]>(
         id: number,
         query: Query<T>
-    ): Entity<ComponentConstructorsAsComponents<T>> | null {
+    ): Entity<InstancesFrom<T>> | null {
         for (const constructor of query._with) {
             if (!this.getComponentsMap(constructor).has(id)) {
                 return null;
@@ -230,11 +217,11 @@ export class ComponentStore {
      * @param callbackfn If query is successful, callbackfn gets called with new components as rest
      * @returns Entity with components
      */
-    public entity<const T extends ComponentConstructor[]>(
+    public entity<const T extends Constructor[]>(
         id: number,
         query: PartialQuery<T>,
-        callbackfn?: (...components: ComponentConstructorsAsComponents<T>) => unknown
-    ): Entity<ComponentConstructorsAsComponents<T>> | null {
+        callbackfn?: (...components: InstancesFrom<T>) => unknown
+    ): Entity<InstancesFrom<T>> | null {
         if (!this.ids.exists(id)) {
             throw new Error(`Entity with id ${id} doesn't exist`);
         }
@@ -250,10 +237,10 @@ export class ComponentStore {
      * @param callbackfn callbackfn gets called for every successfully queried entity with arguments as rest components
      * @returns Entities with components
      */
-    public entities<const T extends ComponentConstructor[]>(
+    public entities<const T extends Constructor[]>(
         query: PartialQuery<T>,
-        callbackfn?: (...components: ComponentConstructorsAsComponents<T>) => unknown
-    ): Entity<ComponentConstructorsAsComponents<T>>[] {
+        callbackfn?: (...components: InstancesFrom<T>) => unknown
+    ): Entity<InstancesFrom<T>>[] {
         const upgradedQuery = Query.upgrade(query);
         const entities = [];
         for (const id of this.ids.iter()) {
@@ -273,8 +260,8 @@ export class ComponentStore {
     /**
      * Get raw entity
      */
-    public rawEntity(id: number): Component[] {
-        const components: Component[] = [];
+    public rawEntity(id: number): Instance[] {
+        const components: Instance[] = [];
         this.components.forEach((map) => {
             const component = map.get(id);
             if (component !== undefined) {
@@ -287,7 +274,7 @@ export class ComponentStore {
     /**
      * Iterate through all raw entities
      */
-    public iterRawEntities(): IteratorObject<Component[]> {
+    public iterRawEntities(): IteratorObject<Instance[]> {
         return this.ids.iter().map((id) => this.rawEntity(id));
     }
 

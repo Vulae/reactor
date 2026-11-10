@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { notNull } from '#lib/util.ts';
 import { Game } from './resource/game';
 import { Reactor } from './resource/reactor';
@@ -22,13 +24,26 @@ import {
     TileBasicHeatVent
 } from './component/tile/basic';
 import { Stats } from './resource/stats';
-import { World } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import { FrameInfo } from './resource/info';
 import { GameRenderOptions } from './resource/options';
 import { GameCursor } from './resource/cursor';
 import { ComponentPlacer } from './resource/componentPlacer';
 import { UpgradeBuyer } from './resource/upgradeBuyer';
 import { ParticleExplosion, ParticleLifetime, ParticlePos } from './component/particle';
+
+function extract<T extends { [key: string]: any }, K extends { [key: string]: any }>(
+    to: T,
+    from: K,
+    keys: (keyof K)[]
+): T {
+    for (const key of keys) {
+        if(from[key] === undefined) continue;
+        // @ts-expect-error - aakjsdaksd
+        to[key] = from[key];
+    }
+    return to;
+}
 
 type Constr = new (...args: any) => any;
 type ConstrNew<C extends Constr> = C extends new (...args: any) => infer R ? R : never;
@@ -78,21 +93,9 @@ class ClassSaver<C extends Constr> {
     }
 }
 
-function extract<T extends { [key: string]: any }, K extends { [key: string]: any }>(
-    to: T,
-    from: K,
-    keys: (keyof K)[]
-): T {
-    for (const key of keys) {
-        // @ts-expect-error - aakjsdaksd
-        to[key] = from[key];
-    }
-    return to;
-}
-
 const SAVERS_RESOURCES: ClassSaver<Constr>[] = [
     ClassSaver.none('Game', Game),
-    ClassSaver.none('World', World),
+    ClassSaver.none('World', ECS.World),
     ClassSaver.none('FrameInfo', FrameInfo),
     ClassSaver.none('GameRenderOptions', GameRenderOptions),
     ClassSaver.none('GameCursor', GameCursor),
@@ -102,7 +105,6 @@ const SAVERS_RESOURCES: ClassSaver<Constr>[] = [
     (() => {
         const KEYS: (keyof TickManager)[] = [
             'numTicks',
-            'millisecondsPerTick',
             'extraTicks',
             'dateSinceLastTick'
         ];
@@ -161,7 +163,8 @@ const SAVERS_RESOURCES: ClassSaver<Constr>[] = [
     ClassSaver.basic('Upgrades', Upgrades, () => new Upgrades(), [
         'basicGenerator',
         'ventEfficiency',
-        'capacitorStorage'
+        'capacitorStorage',
+        'chronometer'
     ])
 ];
 

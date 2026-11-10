@@ -1,15 +1,11 @@
-import { throwConstructedInvalid, throwConstructorInvalid } from './util';
+import {
+    throwInstanceInvalid,
+    throwConstructorInvalid,
+    type Constructor,
+    type Instance,
+    type InstanceFrom
+} from './util';
 import { type World } from './world';
-
-export interface Resource {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    constructor: Function;
-}
-
-export type ResourceConstructor<T extends Resource = Resource> = new (...args: any[]) => T;
-
-export type ResourceConstructorAsResource<T extends ResourceConstructor> =
-    T extends ResourceConstructor<infer O> ? O : never;
 
 export type ResourceStoreOpts = {
     readonly safetyChecks?: boolean;
@@ -29,13 +25,13 @@ export class ResourceStore {
         this.world = world;
     }
 
-    public readonly resources: Map<ResourceConstructor, Resource> = new Map();
+    public readonly resources: Map<Constructor, Instance> = new Map();
 
-    public set<const T extends Resource>(resource: T): T {
+    public set<const T extends Instance>(resource: T): T {
         if (this.safetyChecks) {
-            throwConstructedInvalid(resource);
+            throwInstanceInvalid(resource);
         }
-        const constructor = resource.constructor as ResourceConstructor;
+        const constructor = resource.constructor as Constructor;
         if (!this.resourceAllowOverwrite && this.resources.get(constructor) !== undefined) {
             throw new Error(`Resource "${constructor.name}" already exists`);
         }
@@ -43,22 +39,18 @@ export class ResourceStore {
         return resource;
     }
 
-    public get<const T extends ResourceConstructor>(
-        constructor: T
-    ): ResourceConstructorAsResource<T> {
+    public get<const T extends Constructor>(constructor: T): InstanceFrom<T> {
         if (this.safetyChecks) {
             throwConstructorInvalid(constructor);
         }
-        const resource = this.resources.get(constructor) as
-            | ResourceConstructorAsResource<T>
-            | undefined;
+        const resource = this.resources.get(constructor) as InstanceFrom<T> | undefined;
         if (resource === undefined) {
             throw new Error(`Resource "${constructor.name}" doesn't exist`);
         }
         return resource;
     }
 
-    public iter(): IteratorObject<Resource> {
+    public iter(): IteratorObject<Instance> {
         return this.resources.values();
     }
 

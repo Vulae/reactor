@@ -2,7 +2,7 @@
     import type { TextureAtlas } from '#lib/textureAtlas.ts';
     import { onDestroy, onMount } from 'svelte';
 
-    let { atlas }: { atlas: TextureAtlas<any> } = $props();
+    let { atlas }: { atlas: TextureAtlas<string> } = $props();
 
     let debugTilesetBlob: string | null = $state(null);
 

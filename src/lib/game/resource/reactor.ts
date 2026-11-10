@@ -1,4 +1,4 @@
-import type { World } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import type { TilePos } from '../component/tile/base';
 import { Stats } from './stats';
 
@@ -20,7 +20,7 @@ export class Reactor {
         return this.heat > this.maxHeat;
     }
 
-    public sellPower(world: World): void {
+    public sellPower(world: ECS.World): void {
         const stats = world.resources.get(Stats);
         if (this.power > this.maxPower) {
             this.power = this.maxPower;

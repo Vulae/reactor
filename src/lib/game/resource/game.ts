@@ -27,7 +27,7 @@ import {
     SYSTEM_RENDER_SPRITE
 } from '../system/tile/render';
 import { Stats } from './stats';
-import { System, World } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import { dev } from '$app/env';
 
 const CREATE_SYSTEMS = () => ({
@@ -48,7 +48,7 @@ const CREATE_SYSTEMS = () => ({
         SYSTEM_TICK_DURABILITY,
 
         SYSTEM_TICK_REACTOR,
-        new System([Game, Reactor], (game, reactor) => {
+        new ECS.System([Game, Reactor], (game, reactor) => {
             if (reactor.isOverheating()) {
                 game.setNeedsSetup();
             }
@@ -57,7 +57,7 @@ const CREATE_SYSTEMS = () => ({
     render: [
         FrameInfo.SYSTEM_FIRST,
 
-        new System(
+        new ECS.System(
             [CanvasRenderingContext2D, Reactor, GameRenderOptions],
             (ctx, reactor, renderOpts) => {
                 const canvas = ctx.canvas;
@@ -74,7 +74,7 @@ const CREATE_SYSTEMS = () => ({
             }
         ),
 
-        new System([CanvasRenderingContext2D, Reactor], (ctx, reactor) => {
+        new ECS.System([CanvasRenderingContext2D, Reactor], (ctx, reactor) => {
             for (let x = 0; x < reactor.width; x++) {
                 for (let y = 0; y < reactor.height; y++) {
                     ATLAS.draw(ctx, 'floor', x, y);
@@ -96,8 +96,7 @@ const CREATE_SYSTEMS = () => ({
 });
 
 export type AnnounceMessage =
-    | { type: 'message' | 'info' | 'debug'; message: string }
-    | { type: 'error'; error: Error };
+    { type: 'message' | 'info' | 'debug'; message: string } | { type: 'error'; error: Error };
 
 export class Game extends EventDispatcher<{
     tick: null;
@@ -107,12 +106,12 @@ export class Game extends EventDispatcher<{
 }> {
     public saveDate: Date | null = null;
 
-    public readonly world: World<'setup' | 'tick' | 'render'>;
+    public readonly world: ECS.World<'setup' | 'tick' | 'render'>;
 
     public constructor() {
         super();
 
-        this.world = new World(
+        this.world = new ECS.World(
             {
                 safetyChecks: dev,
                 resourceAllowOverwrite: true,

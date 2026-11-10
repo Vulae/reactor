@@ -1,18 +1,12 @@
-import type {
-    Component,
-    ComponentConstructor,
-    ComponentConstructorsAsComponents
-} from './componentStore';
+import type { Constructor, Instance, InstancesFrom } from './util';
 
-export class Query<const T extends ComponentConstructor[]> {
+export class Query<const T extends Constructor[]> {
     public readonly components: T;
     public constructor(components: T) {
         this.components = components;
     }
 
-    public static upgrade<const T extends ComponentConstructor[]>(
-        partial: PartialQuery<T>
-    ): Query<T> {
+    public static upgrade<const T extends Constructor[]>(partial: PartialQuery<T>): Query<T> {
         if (!(partial instanceof Query)) {
             return new Query(partial);
         } else {
@@ -20,33 +14,33 @@ export class Query<const T extends ComponentConstructor[]> {
         }
     }
 
-    public _with: Set<ComponentConstructor> = new Set();
+    public _with: Set<Constructor> = new Set();
     /**
      * Add extra required components
      */
-    public with(components: ComponentConstructor[]): this {
+    public with(components: Constructor[]): this {
         components.forEach((component) => {
             this._with.add(component);
         });
         return this;
     }
 
-    public _filters: [ComponentConstructor[], (...components: Component[]) => boolean][] = [];
+    public _filters: [Constructor[], (...components: Instance[]) => boolean][] = [];
     /**
      * Add a filter
      */
-    public filter<T extends ComponentConstructor[]>(
+    public filter<T extends Constructor[]>(
         components: T,
-        callbackfn: (...components: ComponentConstructorsAsComponents<T>) => boolean
+        callbackfn: (...components: InstancesFrom<T>) => boolean
     ): this {
-        this._filters.push([components, callbackfn as (...components: Component[]) => boolean]);
+        this._filters.push([components, callbackfn as (...components: Instance[]) => boolean]);
         return this;
     }
 
     /**
      * Merge with other query
      */
-    public join<O extends ComponentConstructor[]>(other: PartialQuery<O>): Query<[...T, ...O]> {
+    public join<O extends Constructor[]>(other: PartialQuery<O>): Query<[...T, ...O]> {
         other = Query.upgrade(other);
         const query = new Query([...this.components, ...other.components]);
         query._with = this._with.union(other._with);
@@ -55,4 +49,4 @@ export class Query<const T extends ComponentConstructor[]> {
     }
 }
 
-export type PartialQuery<T extends ComponentConstructor[] = ComponentConstructor[]> = Query<T> | T;
+export type PartialQuery<T extends Constructor[] = Constructor[]> = Query<T> | T;

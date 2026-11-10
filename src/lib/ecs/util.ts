@@ -1,3 +1,21 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Constructor = new (...args: any[]) => any;
+
+export interface Instance {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    constructor: Function;
+}
+
+export type ConstructorFrom<T extends Instance> = T extends { constructor: infer J } ? J : never;
+
+export type InstanceFrom<T extends Constructor> =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    T extends new (...args: any[]) => infer J ? J : never;
+
+export type InstancesFrom<T extends Constructor[]> = {
+    [K in keyof T]: InstanceFrom<T[K]>;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const INVALID_CONSTRUCTORS: Function[] = [
     Boolean,
@@ -10,7 +28,8 @@ const INVALID_CONSTRUCTORS: Function[] = [
     Function
 ];
 
-export function throwConstructorInvalid(constructor: any): void {
+/** @internal */
+export function throwConstructorInvalid(constructor: Constructor): void {
     if (typeof constructor !== 'function') {
         throw new Error(`Constructor expected to be function, got ${typeof constructor}.`);
     }
@@ -21,21 +40,22 @@ export function throwConstructorInvalid(constructor: any): void {
     }
 }
 
-export function throwConstructedInvalid(constructed: any): void {
-    if (typeof constructed !== 'object') {
-        throw new Error(`Constructed value must be object, got ${typeof constructed}.`);
+/** @internal */
+export function throwInstanceInvalid(instance: Instance): void {
+    if (typeof instance !== 'object') {
+        throw new Error(`Instance value must be object, got ${typeof instance}.`);
     }
-    if (constructed === null) {
-        throw new Error(`Constructed value must not be null.`);
+    if (instance === null) {
+        throw new Error(`Instance value must not be null.`);
     }
-    if (typeof constructed['constructor'] !== 'function') {
-        throw new Error(`Constructed value must have a constructor`);
+    if (typeof instance['constructor'] !== 'function') {
+        throw new Error(`Instance value must have a constructor`);
     }
-    const constructor = constructed['constructor'];
-    throwConstructorInvalid(constructor);
+    throwConstructorInvalid(instance.constructor as Constructor);
 }
 
-export function throwConstructorsInvalid(constructors: any[]): void {
+/** @internal */
+export function throwConstructorsInvalid(constructors: Constructor[]): void {
     for (const constructor of constructors) {
         throwConstructorInvalid(constructor);
     }
@@ -51,9 +71,10 @@ export function throwConstructorsInvalid(constructors: any[]): void {
     }
 }
 
-export function throwConstructedsInvalid(constructeds: any[]): void {
-    for (const constructed of constructeds) {
-        throwConstructedInvalid(constructed);
+/** @internal */
+export function throwInstancesInvalid(instances: Instance[]): void {
+    for (const constructed of instances) {
+        throwInstanceInvalid(constructed);
     }
-    throwConstructorsInvalid(constructeds.map((constructed) => constructed['constructor']));
+    throwConstructorsInvalid(instances.map((instance) => instance.constructor as Constructor));
 }

@@ -89,15 +89,14 @@
         </div>
         <textarea
             bind:this={textarea}
-            class="shadow-outline-down h-12 resize-none bg-white"
+            class="h-12 resize-none bg-white shadow-outline-down"
             autocomplete="off"
             placeholder="Save Game Data"
             style:font-size={textareaEmpty ? 'var(--text-lg)' : 'var(--text-sm)'}
             style:text-align={textareaEmpty ? 'center' : ''}
             oninput={() => {
                 textareaUpdate++;
-            }}
-        ></textarea>
+            }}></textarea>
     </div>
 </div>
 
@@ -109,9 +108,9 @@
 
 <AlertWindow bind:open={loadConfirmationWindow} title="Load Save" gradientStart="black">
     {#if loadConfirmationLoadGame}
-        {@const loadGame = loadConfirmationLoadGame}
-        {@const reactor = loadGame.world.resources.get(Reactor)}
-        {@const tickManager = loadGame.world.resources.get(TickManager)}
+        {const loadGame = $derived(loadConfirmationLoadGame)}
+        {const reactor = $derived(loadGame.world.resources.get(Reactor))}
+        {const tickManager = $derived(loadGame.world.resources.get(TickManager))}
         <div class="flex max-w-80 flex-col gap-1">
             <span class="text-center">Are you sure you want to load save?</span>
             <hr />

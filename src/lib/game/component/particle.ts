@@ -1,4 +1,4 @@
-import { System, World } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import { FrameInfo } from '#lib/game/resource/info.ts';
 import { ATLAS_EXPLOSION } from '#lib/game/textures.ts';
 
@@ -20,7 +20,7 @@ export class ParticleLifetime {
         this.startMilliseconds = milliseconds;
     }
 
-    public static readonly SYSTEM_RENDER = new System(
+    public static readonly SYSTEM_RENDER = new ECS.System(
         [FrameInfo, [ParticleLifetime]],
         (frameInfo, entities) => {
             for (const entity of entities) {
@@ -35,11 +35,11 @@ export class ParticleLifetime {
 }
 
 export class ParticleExplosion {
-    public static create(world: World, pos: ParticlePos): void {
+    public static create(world: ECS.World, pos: ParticlePos): void {
         world.components.add([pos, new ParticleLifetime(500), new ParticleExplosion()]);
     }
 
-    public static readonly SYSTEM_RENDER = new System(
+    public static readonly SYSTEM_RENDER = new ECS.System(
         [CanvasRenderingContext2D, [ParticleExplosion, ParticlePos, ParticleLifetime]],
         (ctx, entities) => {
             for (const entity of entities) {

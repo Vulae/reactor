@@ -32,9 +32,8 @@ const PACKER_NODE_OCCUPIED = Symbol('packer-node-occupied');
 class PackerNode {
     public readonly rect: Rect;
     public state:
-        | typeof PACKER_NODE_UNOCCUPIED
-        | typeof PACKER_NODE_OCCUPIED
-        | [PackerNode, PackerNode] = PACKER_NODE_UNOCCUPIED;
+        typeof PACKER_NODE_UNOCCUPIED | typeof PACKER_NODE_OCCUPIED | [PackerNode, PackerNode] =
+        PACKER_NODE_UNOCCUPIED;
 
     public constructor(rect: Rect) {
         this.rect = rect;

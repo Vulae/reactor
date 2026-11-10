@@ -1,4 +1,4 @@
-import { System, World } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import { ParticleExplosion, ParticlePos } from '#lib/game/component/particle.ts';
 import { TileDurability, TileHeatable, TilePos } from '#lib/game/component/tile/base.ts';
 import { TileBasicGenerator, TileBasicHeatVent } from '#lib/game/component/tile/basic.ts';
@@ -8,7 +8,7 @@ import { Upgrades } from '#lib/game/resource/upgrades.ts';
 import { clamp } from '#lib/util.ts';
 
 export const SYSTEM_TICK_HEATABLE = (() =>
-    new System([World, Reactor, [TileHeatable, TilePos]], (world, reactor, entities) => {
+    new ECS.System([ECS.World, Reactor, [TileHeatable, TilePos]], (world, reactor, entities) => {
         for (const entity of entities) {
             const [heatable, pos] = entity.components;
             if (heatable.heat < 0) {
@@ -22,7 +22,7 @@ export const SYSTEM_TICK_HEATABLE = (() =>
         }
     }))();
 
-export const SYSTEM_TICK_DURABILITY = new System([[TileDurability]], (entities) => {
+export const SYSTEM_TICK_DURABILITY = new ECS.System([[TileDurability]], (entities) => {
     for (const entity of entities) {
         const [dur] = entity.components;
         if (!dur.isDead()) {
@@ -34,7 +34,7 @@ export const SYSTEM_TICK_DURABILITY = new System([[TileDurability]], (entities) 
     }
 });
 
-export const SYSTEM_TICK_BASIC_GENERATOR = new System(
+export const SYSTEM_TICK_BASIC_GENERATOR = new ECS.System(
     [Reactor, Upgrades, Stats, [TilePos, TileBasicGenerator, TileDurability]],
     (reactor, upgrades, stats, entities) => {
         for (const entity of entities) {
@@ -72,7 +72,7 @@ export const SYSTEM_TICK_BASIC_GENERATOR = new System(
     }
 );
 
-export const SYSTEM_TICK_BASIC_HEATVENT = new System(
+export const SYSTEM_TICK_BASIC_HEATVENT = new ECS.System(
     [Upgrades, Stats, [TileBasicHeatVent, TileHeatable]],
     (upgrades, stats, entities) => {
         for (const entity of entities) {

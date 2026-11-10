@@ -1,4 +1,4 @@
-import { System } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import {
     TileBasicSprite,
     TileDurability,
@@ -10,7 +10,7 @@ import { clamp } from '#lib/util.ts';
 
 const BAR_SIZE: number = (1 / TILE_SIZE) * 4;
 
-export const SYSTEM_RENDER_SPRITE = new System(
+export const SYSTEM_RENDER_SPRITE = new ECS.System(
     [CanvasRenderingContext2D, [TileBasicSprite, TilePos]],
     (ctx, entities) => {
         for (const entity of entities) {
@@ -28,7 +28,7 @@ export const SYSTEM_RENDER_SPRITE = new System(
     }
 );
 
-export const SYSTEM_RENDER_HEATABLE = new System(
+export const SYSTEM_RENDER_HEATABLE = new ECS.System(
     [CanvasRenderingContext2D, [TileHeatable, TilePos]],
     (ctx, entities) => {
         for (const entity of entities) {
@@ -42,7 +42,7 @@ export const SYSTEM_RENDER_HEATABLE = new System(
     }
 );
 
-export const SYSTEM_RENDER_DURABILITY = new System(
+export const SYSTEM_RENDER_DURABILITY = new ECS.System(
     [CanvasRenderingContext2D, [TileDurability, TilePos]],
     (ctx, entities) => {
         for (const entity of entities) {

@@ -38,10 +38,9 @@
         </span>
         <textarea
             value={saveGame(game, false)}
-            class="shadow-outline-down h-16 resize-none bg-white"
+            class="h-16 resize-none bg-white shadow-outline-down"
             autocomplete="off"
-            readonly
-        ></textarea>
+            readonly></textarea>
         <hr />
         <div class="grid grid-cols-2 gap-1">
             <button class="button" onclick={() => (clearSaveConfirmationWindow = false)}>

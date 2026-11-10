@@ -14,7 +14,7 @@
         tickListener = game.addEventListener('tickRender', () => {
             rerender++;
         }).id;
-        () => {
+        return () => {
             game.removeEventListener(tickListener);
         };
     });
@@ -22,7 +22,7 @@
 
 <div class="flex flex-col gap-1">
     <span>This Reset</span>
-    <div class="shadow-outline-down bg-white px-2 py-1">
+    <div class="bg-white px-2 py-1 shadow-outline-down">
         Money Gained: ${updateOn(rerender, formatMoney(stats.totalMoneyGainedThisReset))}
         <br />
         Power Generated: {updateOn(rerender, Math.floor(stats.totalPowerGeneratedThisReset))}
@@ -31,7 +31,7 @@
         <br />
     </div>
     <span>All Time</span>
-    <div class="shadow-outline-down bg-white px-2 py-1">
+    <div class="bg-white px-2 py-1 shadow-outline-down">
         Money Gained: ${updateOn(
             rerender,
             formatMoney(stats.totalMoneyGainedThisReset + stats.totalMoneyGained)

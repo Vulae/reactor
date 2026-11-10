@@ -42,7 +42,7 @@
     onMount(() => {
         if (isStatic) return;
         renderFrameCaller.start();
-        () => {
+        return () => {
             renderFrameCaller.stop();
         };
     });

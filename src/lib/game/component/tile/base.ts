@@ -1,4 +1,4 @@
-import { Query, type ComponentConstructor } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import type { ATLAS } from '#lib/game/textures.ts';
 
 export class TilePos {
@@ -17,18 +17,18 @@ export class TilePos {
         return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
     }
 
-    public queryWithinDistance<const T extends ComponentConstructor[]>(
+    public queryWithinDistance<const T extends ECS.Constructor[]>(
         components: T,
         distance: number,
         ignoreThis: boolean = true
-    ): Query<T> {
-        return new Query(components).filter([TilePos], (pos) => {
+    ): ECS.Query<T> {
+        return new ECS.Query(components).filter([TilePos], (pos) => {
             return this.distance(pos) <= distance && (!ignoreThis || pos != this);
         });
     }
 
-    public queryOnPos<const T extends ComponentConstructor[]>(components: T): Query<T> {
-        return new Query(components).filter([TilePos], (pos) => {
+    public queryOnPos<const T extends ECS.Constructor[]>(components: T): ECS.Query<T> {
+        return new ECS.Query(components).filter([TilePos], (pos) => {
             return this.eq(pos);
         });
     }
@@ -71,11 +71,11 @@ export class TileDurability {
         return this.durability <= 0;
     }
 
-    public static queryIsDead<const T extends ComponentConstructor[]>(
+    public static queryIsDead<const T extends ECS.Constructor[]>(
         isDead: boolean,
         components: T
-    ): Query<T> {
-        return new Query(components).filter([TileDurability], (durability) => {
+    ): ECS.Query<T> {
+        return new ECS.Query(components).filter([TileDurability], (durability) => {
             return durability.isDead() == isDead;
         });
     }

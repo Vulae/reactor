@@ -36,8 +36,8 @@
             }}>Log Save Game</button
         ><br />
         {#key frame}
-            {@const { numEntities, numComponents } = game.world.components.__DEBUG_INFO()}
-            {@const { numResources } = game.world.resources.__DEBUG_INFO()}
+            {const { numEntities, numComponents } = game.world.components.__DEBUG_INFO()}
+            {const { numResources } = game.world.resources.__DEBUG_INFO()}
             Frame: {frameInfo.numFrames}
             <br />
             FPS: {frameInfo.fps}

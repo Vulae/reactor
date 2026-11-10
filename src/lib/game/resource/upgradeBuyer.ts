@@ -36,7 +36,12 @@ function upgradesBasicCellPowerGeneration(
                 textures: [texture, 'upgrade_power'],
                 buyable: upgrades.basicGenerator[type].powerGeneration < 100,
                 bought: upgrades.basicGenerator[type].powerGeneration,
-                cost: upgrades.getBasicGeneratorUpgradeCost(type).powerGeneration
+                cost:
+                    {
+                        [TileBasicGeneratorType.Uranium]: 100,
+                        [TileBasicGeneratorType.Plutonium]: 500000
+                    }[type] *
+                    (upgrades.basicGenerator[type].powerGeneration + 1) ** 4
             };
         },
         (game) => {
@@ -59,7 +64,12 @@ function upgradesBasicCellDurability(
                 textures: [texture, 'upgrade_duration'],
                 buyable: upgrades.basicGenerator[type].durability < 10,
                 bought: upgrades.basicGenerator[type].durability,
-                cost: upgrades.getBasicGeneratorUpgradeCost(type).durability
+                cost:
+                    {
+                        [TileBasicGeneratorType.Uranium]: 250,
+                        [TileBasicGeneratorType.Plutonium]: 1250000
+                    }[type] *
+                    50 ** (upgrades.basicGenerator[type].durability + 1)
             };
         },
         (game) => {
@@ -82,7 +92,10 @@ function upgradesBasicCellAutoReplace(
                 textures: [texture, 'upgrade_infinite'],
                 buyable: !upgrades.basicGenerator[type].autoReplace,
                 bought: upgrades.basicGenerator[type].autoReplace,
-                cost: upgrades.getBasicGeneratorUpgradeCost(type).autoReplace
+                cost: {
+                    [TileBasicGeneratorType.Uranium]: 10000,
+                    [TileBasicGeneratorType.Plutonium]: 10000000
+                }[type]
             };
         },
         (game) => {
@@ -121,16 +134,49 @@ const UPGRADES = {
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
             return {
-                name: `Efficient Vents`,
-                description: `Increases vent amount by +100% per level`,
+                name: 'Efficient Vents',
+                description: 'Increases vent amount by +100% per level',
                 textures: ['vent_basic', 'upgrade_plus'],
                 bought: upgrades.ventEfficiency,
-                cost: upgrades.getVentEffiencyCost()
+                cost: 250 * (upgrades.ventEfficiency + 1) ** 3
             };
         },
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
             upgrades.ventEfficiency++;
+        }
+    ),
+    capacitor_storage: new Upgrade(
+        (game) => {
+            const upgrades = game.world.resources.get(Upgrades);
+            return {
+                name: 'Capacitor Storage',
+                description: 'Increases capacitor capacity by +100% per level',
+                textures: ['capacitor_basic', 'upgrade_plus'],
+                bought: upgrades.capacitorStorage,
+                cost: 250 * (upgrades.capacitorStorage + 1) ** 3
+            };
+        },
+        (game) => {
+            const upgrades = game.world.resources.get(Upgrades);
+            upgrades.capacitorStorage++;
+        }
+    ),
+    chronometer: new Upgrade(
+        (game) => {
+            const upgrades = game.world.resources.get(Upgrades);
+            return {
+                name: 'Chronometer',
+                description: '+1 ticks per second per level',
+                textures: ['missing_texture'],
+                bought: upgrades.chronometer,
+                buyable: upgrades.chronometer < 99,
+                cost: 100 ** (upgrades.chronometer + 1)
+            };
+        },
+        (game) => {
+            const upgrades = game.world.resources.get(Upgrades);
+            upgrades.chronometer++;
         }
     )
 } as const;

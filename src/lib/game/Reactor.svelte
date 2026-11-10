@@ -4,10 +4,10 @@
     import type { Game } from './resource/game';
     import ReactorCanvas from './ReactorCanvas.svelte';
     import { Stats } from './resource/stats';
-    import ImgProgressHeatInactive from "#lib/assets/progress-heat-inactive.png";
-    import ImgProgressHeatActive from "#lib/assets/progress-heat-active.png";
-    import ImgProgressPowerInactive from "#lib/assets/progress-power-inactive.png";
-    import ImgProgressPowerActive from "#lib/assets/progress-power-active.png";
+    import ImgProgressHeatInactive from '#lib/assets/progress-heat-inactive.png';
+    import ImgProgressHeatActive from '#lib/assets/progress-heat-active.png';
+    import ImgProgressPowerInactive from '#lib/assets/progress-power-inactive.png';
+    import ImgProgressPowerActive from '#lib/assets/progress-power-active.png';
 
     let { game }: { game: Game } = $props();
     let reactor = $derived(game.world.resources.get(Reactor));
@@ -39,7 +39,7 @@
     <div class="force-overlap">
         {#key tick}
             <progress
-                class="w-full custom-progress"
+                class="custom-progress w-full"
                 style="--inactive-image: url('{ImgProgressHeatInactive}'); --active-image: url('{ImgProgressHeatActive}')"
                 value={reactor.heat / reactor.maxHeat}
             ></progress>
@@ -68,7 +68,7 @@
     <div class="force-overlap">
         {#key tick}
             <progress
-                class="w-full custom-progress"
+                class="custom-progress w-full"
                 style="--inactive-image: url('{ImgProgressPowerInactive}'); --active-image: url('{ImgProgressPowerActive}')"
                 value={reactor.power / reactor.maxPower}
             ></progress>
@@ -92,11 +92,13 @@
 </div>
 
 <style>
-    .custom-progress, .custom-progress::-webkit-progress-bar {
+    .custom-progress,
+    .custom-progress::-webkit-progress-bar {
         background-image: var(--inactive-image);
     }
 
-    .custom-progress::-webkit-progress-value, .custom-progress::-moz-progress-bar {
+    .custom-progress::-webkit-progress-value,
+    .custom-progress::-moz-progress-bar {
         background-image: var(--active-image);
     }
 </style>

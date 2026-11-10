@@ -35,7 +35,7 @@
         </div>
     {:else if style == 'outdent'}
         <div class="p-2">
-            <div class="shadow-outline-up h-max w-max bg-zinc-300">
+            <div class="h-max w-max bg-zinc-300 shadow-outline-up">
                 {@render children()}
             </div>
         </div>

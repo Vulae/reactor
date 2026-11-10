@@ -1,4 +1,4 @@
-import { System, type Component, type Entity, type World } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import { TileDurability, TileType, TilePos } from '../component/tile/base';
 import { ATLAS } from '../textures';
 import { ComponentPlacer } from './componentPlacer';
@@ -36,7 +36,7 @@ export class GameCursor {
         return this._pos;
     }
 
-    public getTile(world: World): Entity<[TilePos]> | null {
+    public getTile(world: ECS.World): ECS.Entity<[TilePos]> | null {
         if (!this.pos) {
             return null;
         }
@@ -53,7 +53,7 @@ export class GameCursor {
     private placeTile(
         game: Game,
         pos: TilePos,
-        tile: Component[],
+        tile: ECS.Instance[],
         overwriteType?: string
     ): boolean {
         const reactor = game.world.resources.get(Reactor);
@@ -108,7 +108,7 @@ export class GameCursor {
         game.setNeedsSetup();
     }
 
-    public static readonly SYSTEM_RENDER = new System(
+    public static readonly SYSTEM_RENDER = new ECS.System(
         [Game, CanvasRenderingContext2D, GameCursor, ComponentPlacer],
         (game, ctx, cursor, placer) => {
             const tile = cursor.getTile(game.world);

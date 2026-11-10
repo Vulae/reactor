@@ -1,20 +1,17 @@
-import {
-    ComponentStore,
-    type ComponentConstructor,
-    type ComponentConstructorsAsComponents,
-    type ComponentStoreOpts
-} from './componentStore';
+import { ComponentStore, type ComponentStoreOpts } from './componentStore';
 import type { Entity } from './entity';
 import { Query, type PartialQuery } from './query';
 import { ResourceStore, type ResourceStoreOpts } from './resourceStore';
+import type { Constructor, InstancesFrom } from './util';
 
-type SystemQuery = (PartialQuery | ComponentConstructor)[];
+type SystemQuery = (PartialQuery | Constructor)[];
 
 type SystemQueryCallbackFn<T extends SystemQuery> = (
     ...args: {
         [K in keyof T]: T[K] extends PartialQuery<infer T>
-            ? Entity<ComponentConstructorsAsComponents<T>>[]
-            : T[K] extends ComponentConstructor<infer T>
+            ? Entity<InstancesFrom<T>>[]
+            : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              T[K] extends new (...args: any[]) => infer T
               ? T
               : never;
     }

@@ -53,7 +53,7 @@ body {
 }
 
 .button {
-    @apply shadow-outline-up cursor-pointer bg-zinc-300;
+    @apply cursor-pointer bg-zinc-300 shadow-outline-up;
     &:hover:not(:disabled) {
         @apply bg-zinc-200;
     }
@@ -86,7 +86,7 @@ body {
 
     &::before {
         content: '';
-        @apply shadow-outline-down absolute block size-[0.8em] bg-white;
+        @apply absolute block size-[0.8em] bg-white shadow-outline-down;
     }
     &:checked::after {
         content: 'X';
@@ -103,4 +103,4 @@ a {
     &:hover {
         @apply underline;
     }
-} 
+}

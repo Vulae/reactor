@@ -16,6 +16,7 @@
 
     $effect(() => {
         upgradeBuyerEventListener = upgradeBuyer.addEventListener('update', () => {
+            game.dispatchEvent('tickRender', null);
             rerender++;
         }).id;
         return () => {
@@ -28,15 +29,15 @@
 
 {#snippet overlapTextures(textures: (keyof (typeof ATLAS)['textures'])[])}
     <div class="force-overlap">
-        {#each textures as texture}
+        {#each textures as texture (texture)}
             <TextureAtlasImage atlas={ATLAS} {texture} />
         {/each}
     </div>
 {/snippet}
 
 {#snippet shopItem(identifier: keyof (typeof UpgradeBuyer)['UPGRADES'])}
-    {@const upgrade = updateOn(rerender, UpgradeBuyer.UPGRADES[identifier])}
-    {@const info = upgrade.info(game)}
+    {const upgrade = $derived(updateOn(rerender, UpgradeBuyer.UPGRADES[identifier]))}
+    {const info = $derived(upgrade.info(game))}
     <button
         class="button flex size-9 items-center justify-center"
         disabled={info.buyable === false || info.bought === true}
@@ -67,11 +68,13 @@
         {@render shopItem('cell_durability_plutonium')}
         {@render shopItem('cell_autoreplace_plutonium')}
         {@render shopItem('vent_efficiency')}
+        {@render shopItem('capacitor_storage')}
+        {@render shopItem('chronometer')}
     </div>
 {/key}
 
 {#if hoverShopItem}
-    {@const info = updateOn(rerender, UpgradeBuyer.UPGRADES[hoverShopItem].info(game))}
+    {const info = $derived(updateOn(rerender, UpgradeBuyer.UPGRADES[hoverShopItem].info(game)))}
     <MouseTooltip style="speech">
         <div class="flex w-min flex-col gap-1 py-1">
             <div class="flex flex-col px-2">
@@ -80,8 +83,8 @@
                 <div class="text-nowrap">
                     {#if info.cost}
                         <span class="text-lg">${formatMoney(info.cost)}</span>
+                        -
                     {/if}
-                    -
                     <span class="text-lg">
                         {typeof info.bought == 'number'
                             ? `BOUGHT ${info.bought} TIMES`

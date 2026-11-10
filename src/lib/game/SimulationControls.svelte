@@ -5,8 +5,10 @@
     import { TickManager } from './resource/tickManager';
     import TextureAtlasImage from '#lib/TextureAtlasImage.svelte';
     import { ATLAS } from './textures';
+    import { Upgrades } from './resource/upgrades';
 
     let { game }: { game: Game } = $props();
+    let upgrades = $derived(game.world.resources.get(Upgrades));
     let tickManager = $derived(game.world.resources.get(TickManager));
 
     let rerender = $state(1);
@@ -33,14 +35,14 @@
             }
         } else {
             game.tick();
-            if (tickManager.millisecondsPerTick != intervalCaller.getDelay()) {
-                intervalCaller.setDelay(tickManager.millisecondsPerTick);
+            if (tickManager.getMillisecondPerTick(upgrades) != intervalCaller.getDelay()) {
+                intervalCaller.setDelay(tickManager.getMillisecondPerTick(upgrades));
             }
         }
     });
 
     onMount(() => {
-        intervalCaller.setDelay(tickManager.millisecondsPerTick);
+        intervalCaller.setDelay(tickManager.getMillisecondPerTick(upgrades));
         intervalCaller.start();
         return () => {
             intervalCaller.stop();
@@ -51,7 +53,7 @@
         tickListener = game.addEventListener('tickRender', () => {
             rerender++;
         }).id;
-        () => {
+        return () => {
             game.removeEventListener(tickListener);
         };
     });
@@ -84,7 +86,7 @@
             onclick={() => {
                 if (running) return;
                 const now = performance.now();
-                if (now - lastStepTickTime < tickManager.millisecondsPerTick) return;
+                if (now - lastStepTickTime < tickManager.getMillisecondPerTick(upgrades)) return;
                 lastStepTickTime = now;
                 game.tick();
             }}
@@ -107,7 +109,7 @@
                 if (tickManager.extraTicks == 0) return;
                 fastTicksActive = !fastTicksActive;
                 intervalCaller.setDelay(
-                    fastTicksActive ? FAST_TICK_RATE : tickManager.millisecondsPerTick
+                    fastTicksActive ? FAST_TICK_RATE : tickManager.getMillisecondPerTick(upgrades)
                 );
             }}
         >

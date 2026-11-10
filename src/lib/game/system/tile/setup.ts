@@ -1,4 +1,4 @@
-import { System } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import { TileCapacitor, TileDurability, TileHeatable } from '#lib/game/component/tile/base.ts';
 import {
     TileBasicCapacitor,
@@ -7,7 +7,7 @@ import {
 } from '#lib/game/component/tile/basic.ts';
 import { Upgrades } from '#lib/game/resource/upgrades.ts';
 
-export const SYSTEM_SETUP_BASIC_GENERATOR = new System(
+export const SYSTEM_SETUP_BASIC_GENERATOR = new ECS.System(
     [Upgrades, [TileBasicGenerator, TileDurability]],
     (upgrades, entities) => {
         for (const entity of entities) {
@@ -17,7 +17,7 @@ export const SYSTEM_SETUP_BASIC_GENERATOR = new System(
     }
 );
 
-export const SYSTEM_SETUP_BASIC_HEATVENT = new System(
+export const SYSTEM_SETUP_BASIC_HEATVENT = new ECS.System(
     [Upgrades, [TileBasicHeatVent, TileHeatable]],
     (upgrades, entities) => {
         for (const entity of entities) {
@@ -27,12 +27,12 @@ export const SYSTEM_SETUP_BASIC_HEATVENT = new System(
     }
 );
 
-export const SYSTEM_SETUP_BASIC_CAPACITOR = new System(
+export const SYSTEM_SETUP_BASIC_CAPACITOR = new ECS.System(
     [Upgrades, [TileBasicCapacitor, TileCapacitor]],
     (upgrades, entities) => {
         for (const entity of entities) {
             const [basicCapacitor, capacitor] = entity.components;
-            capacitor.powerAmount = upgrades.getBasicCapacitorPowerStorage(basicCapacitor.type);
+            capacitor.powerAmount = basicCapacitor.getPowerStorage(upgrades);
         }
     }
 );

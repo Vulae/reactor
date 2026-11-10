@@ -3,7 +3,7 @@ function getId(): number {
     return ID_NUM++;
 }
 
-type EventMap = { [key: string]: any };
+type EventMap = { [key: string]: unknown };
 
 type Event<M extends EventMap, K extends keyof M> = {
     readonly data: M[K];
@@ -16,9 +16,9 @@ type Event<M extends EventMap, K extends keyof M> = {
     readonly stopPropagation: () => void;
 };
 
-export type EventListener<M extends EventMap = any, K extends keyof M = any> = {
+export type EventListener<M extends EventMap, K extends keyof M> = {
     readonly key: K;
-    readonly callbackfn: (event: Event<M, K>) => any;
+    readonly callbackfn: (event: Event<M, K>) => unknown;
     readonly priority: number;
     readonly id: number;
     readonly once: boolean;
@@ -88,7 +88,7 @@ export abstract class EventDispatcher<M extends EventMap> {
      */
     public addEventListener<K extends keyof M>(
         key: K,
-        callbackfn: (event: Event<M, K>) => any,
+        callbackfn: (event: Event<M, K>) => unknown,
         once: boolean = false,
         priority: number = 0
     ): EventListener<M, K> {

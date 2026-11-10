@@ -1,13 +1,8 @@
-import type {
-    Component,
-    ComponentConstructor,
-    ComponentConstructorsAsComponents
-} from './componentStore';
 import type { PartialQuery } from './query';
-import { throwConstructedsInvalid } from './util';
+import { throwInstancesInvalid, type Constructor, type Instance, type InstancesFrom } from './util';
 import type { World } from './world';
 
-export class Entity<const T extends Component[]> {
+export class Entity<const T extends Instance[]> {
     public readonly world: World;
     public readonly id: number;
     public readonly components: T;
@@ -30,20 +25,20 @@ export class Entity<const T extends Component[]> {
      * @param callbackfn If query is successful, callbackfn gets called with new components as rest
      * @returns Entity with new components
      */
-    public with<const A extends ComponentConstructor[]>(
+    public with<const A extends Constructor[]>(
         query: PartialQuery<A>,
-        callbackfn?: (...components: ComponentConstructorsAsComponents<A>) => unknown
-    ): Entity<ComponentConstructorsAsComponents<A>> | null {
+        callbackfn?: (...components: InstancesFrom<A>) => unknown
+    ): Entity<InstancesFrom<A>> | null {
         return this.world.components.entity(this.id, query, callbackfn);
     }
 
     /**
      * Appends new components to this entity
      */
-    public append<const A extends Component[]>(components: A): Entity<[...T, ...A]> {
+    public append<const A extends Instance[]>(components: A): Entity<[...T, ...A]> {
         const requeried = this.world.components.append(this.id, components);
         if (this.world.components.safetyChecks) {
-            throwConstructedsInvalid([...this.components, ...requeried.components]);
+            throwInstancesInvalid([...this.components, ...requeried.components]);
         }
         return new Entity(this.world, this.id, [...this.components, ...requeried.components]);
     }
@@ -51,7 +46,7 @@ export class Entity<const T extends Component[]> {
     /**
      * Remove components from this entity
      */
-    public remove<const A extends ComponentConstructor[]>(components: A): void {
+    public remove<const A extends Constructor[]>(components: A): void {
         this.world.components.remove(this.id, components);
     }
 }

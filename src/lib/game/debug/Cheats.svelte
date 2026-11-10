@@ -9,7 +9,7 @@
 </script>
 
 <div class="flex flex-col">
-    <span class="font-jersey grid grid-cols-1 text-xl">
+    <span class="grid grid-cols-1 font-jersey text-xl">
         <button
             class="button px-2"
             onclick={() => {

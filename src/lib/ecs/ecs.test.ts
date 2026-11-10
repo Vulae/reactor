@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import test, { suite } from 'node:test';
 import { System, World } from './world';
-import { throwConstructedInvalid, throwConstructorInvalid } from './util';
+import { throwInstanceInvalid, throwConstructorInvalid } from './util';
 
 suite('simple ecs', () => {
     test('ecs resource', () => {
@@ -92,12 +92,12 @@ suite('simple ecs', () => {
         assert.throws(() => throwConstructorInvalid(Array));
         assert.throws(() => throwConstructorInvalid(Object));
         assert.throws(() => throwConstructorInvalid(Function));
-        assert.throws(() => throwConstructedInvalid(67));
-        assert.throws(() => throwConstructedInvalid(':3'));
-        assert.throws(() => throwConstructedInvalid([]));
-        assert.throws(() => throwConstructedInvalid({}));
-        assert.throws(() => throwConstructedInvalid(() => {}));
+        assert.throws(() => throwInstanceInvalid(67));
+        assert.throws(() => throwInstanceInvalid(':3'));
+        assert.throws(() => throwInstanceInvalid([]));
+        assert.throws(() => throwInstanceInvalid({}));
+        assert.throws(() => throwInstanceInvalid(() => {}));
         assert.doesNotThrow(() => throwConstructorInvalid(Uint8Array));
-        assert.doesNotThrow(() => throwConstructedInvalid(new Uint8Array([1])));
+        assert.doesNotThrow(() => throwInstanceInvalid(new Uint8Array([1])));
     });
 });

@@ -1,4 +1,4 @@
-import { System } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 
 export class FrameInfo {
     private _numFrames: number = 0;
@@ -21,7 +21,7 @@ export class FrameInfo {
         return this._moments.length;
     }
 
-    public static readonly SYSTEM_FIRST = new System([FrameInfo], (info) => {
+    public static readonly SYSTEM_FIRST = new ECS.System([FrameInfo], (info) => {
         const now = performance.now();
         while (info._moments.length > 0 && info._moments[0] <= now - 1000) {
             info._moments.shift();
@@ -32,7 +32,7 @@ export class FrameInfo {
         info._frameStart = now;
     });
 
-    public static readonly SYSTEM_LAST = new System([FrameInfo], (info) => {
+    public static readonly SYSTEM_LAST = new ECS.System([FrameInfo], (info) => {
         info._frameEnd = performance.now();
         info._numFrames++;
     });

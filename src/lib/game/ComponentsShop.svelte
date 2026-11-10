@@ -1,7 +1,7 @@
 <script lang="ts">
     import MouseTooltip from '#lib/MouseTooltip.svelte';
     import TextureAtlasImage from '#lib/TextureAtlasImage.svelte';
-    import { updateOn } from "#lib/util.ts";
+    import { updateOn } from '#lib/util.ts';
     import { ComponentPlacer } from '#game/resource/componentPlacer.ts';
     import type { Game } from '#game/resource/game.ts';
     import { ATLAS } from '#game/textures.ts';
@@ -27,7 +27,7 @@
 </script>
 
 {#snippet shopItem(identifier: keyof (typeof ComponentPlacer)['COMPONENTS'])}
-    {@const info = updateOn(rerender, ComponentPlacer.COMPONENTS[identifier].info(game))}
+    {const info = $derived(updateOn(rerender, ComponentPlacer.COMPONENTS[identifier].info(game)))}
     <button
         class="button flex size-9 items-center justify-center"
         class:button-active={updateOn(rerender, placer.selected == identifier)}
@@ -64,7 +64,9 @@
 </div>
 
 {#if hoverShopItem}
-    {@const info = updateOn(rerender, ComponentPlacer.COMPONENTS[hoverShopItem].info(game))}
+    {const info = $derived(
+        updateOn(rerender, ComponentPlacer.COMPONENTS[hoverShopItem].info(game))
+    )}
     <MouseTooltip style="speech">
         <div class="flex w-min flex-col gap-1 py-1">
             <div class="flex flex-col px-2">

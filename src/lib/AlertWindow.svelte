@@ -12,11 +12,11 @@
         children
     }: {
         open: boolean;
-        title: String;
+        title: string;
         titleDark?: boolean;
-        gradientStart: String;
-        gradientEnd?: String;
-        class?: String;
+        gradientStart: string;
+        gradientEnd?: string;
+        class?: string;
         children: Snippet;
     } = $props();
 

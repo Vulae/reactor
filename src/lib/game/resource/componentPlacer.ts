@@ -1,4 +1,4 @@
-import type { Component } from '#lib/ecs/index.ts';
+import * as ECS from '#ecs';
 import { EventDispatcher } from '#lib/eventDispatcher.ts';
 import {
     TileBasicSprite,
@@ -29,8 +29,8 @@ type Info = {
 
 class Placer {
     public readonly info: (game: Game) => Info;
-    public readonly place: (game: Game) => Component[];
-    public constructor(info: (game: Game) => Info, place: (game: Game) => Component[]) {
+    public readonly place: (game: Game) => ECS.Instance[];
+    public constructor(info: (game: Game) => Info, place: (game: Game) => ECS.Instance[]) {
         this.info = info;
         this.place = place;
     }
@@ -45,23 +45,29 @@ function placerBasicCell(
     return new Placer(
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
+            const generator = new TileBasicGenerator(type, tier);
             return {
                 name: `${['Singular', 'Double', 'Quadruple'][tier]} ${type} Cell`,
-                description: `Generates ${upgrades.getBasicGeneratorPowerGeneration(type, tier)} power and ${upgrades.getBasicGeneratorHeatGeneration(type, tier)} heat for ${upgrades.getBasicGeneratorDurability(type)} ticks`,
+                description: `Generates ${generator.getPowerGeneration(upgrades)} power and ${generator.getHeatGeneration(upgrades)} heat for ${generator.getMaxDurability(upgrades)} ticks`,
                 texture,
-                cost: upgrades.getBasicGeneratorCost(type, tier),
+                cost:
+                    {
+                        [TileBasicGeneratorType.Uranium]: 10,
+                        [TileBasicGeneratorType.Plutonium]: 10
+                    }[type] *
+                    (tier + 1) ** 2,
                 weakType: 'cell',
                 strongType
             };
         },
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
-            const durability = upgrades.getBasicGeneratorDurability(type);
+            const generator = new TileBasicGenerator(type, tier);
             return [
                 new TileType('cell', strongType),
                 new TileBasicSprite(texture),
-                new TileDurability(durability),
-                new TileBasicGenerator(type, tier)
+                new TileDurability(generator.getMaxDurability(upgrades)),
+                generator
             ];
         }
     );
@@ -75,22 +81,27 @@ function placerBasicVent(
     return new Placer(
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
+            const vent = new TileBasicHeatVent(type);
             return {
                 name: `${type} Heat Vent`,
-                description: `Dissipates ${upgrades.getBasicVentHeatVentAmount(type)} heat per tick and holds ${upgrades.getBasicVentMaxHeat(type)} heat`,
+                description: `Dissipates ${vent.getHeatVentAmount(upgrades)} heat per tick and holds ${vent.getMaxHeat(upgrades)} heat`,
                 texture,
-                cost: upgrades.getBasicVentCost(type),
+                cost: {
+                    [TileBasicComponentType.Basic]: 50,
+                    [TileBasicComponentType.Advanced]: 12500
+                }[type],
                 weakType: 'vent',
                 strongType
             };
         },
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
+            const vent = new TileBasicHeatVent(type);
             return [
                 new TileType('vent', strongType),
                 new TileBasicSprite(texture),
-                new TileHeatable(upgrades.getBasicVentMaxHeat(type)),
-                new TileBasicHeatVent(type)
+                new TileHeatable(vent.getMaxHeat(upgrades)),
+                vent
             ];
         }
     );
@@ -104,23 +115,28 @@ function placerBasicCapacitor(
     return new Placer(
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
+            const capacitor = new TileBasicCapacitor(type);
             return {
                 name: `${type} Capacitor`,
-                description: `Increases total power storage of the reactor by ${upgrades.getBasicCapacitorPowerStorage(type)}`,
+                description: `Increases total power storage of the reactor by ${capacitor.getPowerStorage(upgrades)}`,
                 texture,
-                cost: upgrades.getBasicCapacitorCost(type),
+                cost: {
+                    [TileBasicComponentType.Basic]: 1000,
+                    [TileBasicComponentType.Advanced]: 125000
+                }[type],
                 weakType: 'capacitor',
                 strongType
             };
         },
         (game) => {
             const upgrades = game.world.resources.get(Upgrades);
+            const capacitor = new TileBasicCapacitor(type);
             return [
                 new TileType('capacitor', strongType),
                 new TileBasicSprite(texture),
                 new TileHeatable(1),
-                new TileCapacitor(upgrades.getBasicCapacitorPowerStorage(type)),
-                new TileBasicCapacitor(type)
+                new TileCapacitor(capacitor.getPowerStorage(upgrades)),
+                capacitor
             ];
         }
     );

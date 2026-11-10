@@ -19,7 +19,6 @@
 
     let { dev = $bindable(false) }: { dev?: boolean } = $props();
 
-    // svelte-ignore state_referenced_locally
     let game = $state(new Game());
 
     $effect(() => {
@@ -36,17 +35,6 @@
     let dragActive: boolean = $state(false);
     let positionX: number = $state(0);
     let positionY: number = $state(0);
-
-    let tickRender: number = $state(0);
-    let tickRenderListener: number = -1;
-    $effect(() => {
-        tickRenderListener = game.addEventListener('tickRender', () => {
-            tickRender++;
-        }).id;
-        () => {
-            game.removeEventListener(tickRenderListener);
-        };
-    });
 </script>
 
 <svelte:body

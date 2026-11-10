@@ -23,7 +23,7 @@
     let scrounge = $derived(rerender && reactor.money < 100);
 </script>
 
-<div class="flex w-40 justify-between items-center">
+<div class="flex w-40 items-center justify-between h-6">
     <span class="font-jersey text-2xl">
         {#key rerender}
             ${formatMoney(reactor.money)}
@@ -36,7 +36,7 @@
                 stats.totalMoneyGainedThisReset++;
                 game.setTickRerender();
             }}
-            class="button px-2 h-6">Scrounge for $1</button
+            class="button px-2 h-5">Scrounge for $1</button
         >
     {/if}
 </div>

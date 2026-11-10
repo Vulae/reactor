@@ -12,11 +12,11 @@
         collapsed = false,
         onClose
     }: {
-        title: String;
+        title: string;
         titleDark?: boolean;
-        gradientStart: String;
-        gradientEnd?: String;
-        class?: String;
+        gradientStart: string;
+        gradientEnd?: string;
+        class?: string;
         children: Snippet;
         collapsable?: 'no' | 'hidden' | 'removed';
         collapsed?: boolean;
@@ -24,7 +24,7 @@
     } = $props();
 </script>
 
-<div class="shadow-outline-up flex flex-col gap-1 bg-zinc-300 p-1 {_class}">
+<div class="flex flex-col gap-1 bg-zinc-300 p-1 shadow-outline-up {_class}">
     <div
         class="grid grid-cols-[1fr_auto] gap-2 px-1"
         style:background="linear-gradient(90deg, {gradientStart} 0%, {gradientEnd} 100%)"
