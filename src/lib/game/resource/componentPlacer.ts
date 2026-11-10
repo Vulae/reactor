@@ -5,6 +5,7 @@ import {
     TileCapacitor,
     TileDurability,
     TileHeatable,
+    TilePos,
     TileType
 } from '../component/tile/base';
 import {
@@ -29,8 +30,11 @@ type Info = {
 
 class Placer {
     public readonly info: (game: Game) => Info;
-    public readonly place: (game: Game) => ECS.Instance[];
-    public constructor(info: (game: Game) => Info, place: (game: Game) => ECS.Instance[]) {
+    public readonly place: (game: Game, pos: TilePos) => ECS.Instance[];
+    public constructor(
+        info: (game: Game) => Info,
+        place: (game: Game, pos: TilePos) => ECS.Instance[]
+    ) {
         this.info = info;
         this.place = place;
     }
@@ -50,20 +54,16 @@ function placerBasicCell(
                 name: `${['Singular', 'Double', 'Quadruple'][tier]} ${type} Cell`,
                 description: `Generates ${generator.getPowerGeneration(upgrades)} power and ${generator.getHeatGeneration(upgrades)} heat for ${generator.getMaxDurability(upgrades)} ticks`,
                 texture,
-                cost:
-                    {
-                        [TileBasicGeneratorType.Uranium]: 10,
-                        [TileBasicGeneratorType.Plutonium]: 10
-                    }[type] *
-                    (tier + 1) ** 2,
+                cost: generator.getCost(upgrades),
                 weakType: 'cell',
                 strongType
             };
         },
-        (game) => {
+        (game, pos) => {
             const upgrades = game.world.resources.get(Upgrades);
             const generator = new TileBasicGenerator(type, tier);
             return [
+                pos,
                 new TileType('cell', strongType),
                 new TileBasicSprite(texture),
                 new TileDurability(generator.getMaxDurability(upgrades)),
@@ -94,10 +94,11 @@ function placerBasicVent(
                 strongType
             };
         },
-        (game) => {
+        (game, pos) => {
             const upgrades = game.world.resources.get(Upgrades);
             const vent = new TileBasicHeatVent(type);
             return [
+                pos,
                 new TileType('vent', strongType),
                 new TileBasicSprite(texture),
                 new TileHeatable(vent.getMaxHeat(upgrades)),
@@ -128,10 +129,11 @@ function placerBasicCapacitor(
                 strongType
             };
         },
-        (game) => {
+        (game, pos) => {
             const upgrades = game.world.resources.get(Upgrades);
             const capacitor = new TileBasicCapacitor(type);
             return [
+                pos,
                 new TileType('capacitor', strongType),
                 new TileBasicSprite(texture),
                 new TileHeatable(1),
@@ -201,5 +203,5 @@ export class ComponentPlacer extends EventDispatcher<{
     update: null;
 }> {
     public static readonly COMPONENTS = COMPONENTS;
-    public selected: keyof typeof COMPONENTS | null = null;
+    public selected: keyof typeof COMPONENTS | ((pos: TilePos) => ECS.Instance[]) | null = null;
 }

@@ -37,7 +37,7 @@
             } else {
                 placer.selected = identifier;
             }
-            rerender++;
+            placer.dispatchEvent('update', null);
         }}
         onpointerenter={() => {
             hoverShopItem = identifier;

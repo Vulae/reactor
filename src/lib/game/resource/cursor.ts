@@ -50,6 +50,9 @@ export class GameCursor {
         return entities.length > 0 ? entities[0] : null;
     }
 
+    // WARNING: The below code is super super stinky
+    // DO NOT READ! Instead please refactor all of this next time you need to change it.
+
     private placeTile(
         game: Game,
         pos: TilePos,
@@ -81,7 +84,7 @@ export class GameCursor {
         if (game.world.components.entities(pos.queryOnPos([])).length > 0) {
             return false;
         }
-        game.world.components.add([pos, ...tile]);
+        game.world.components.add(tile);
         return true;
     }
 
@@ -89,10 +92,16 @@ export class GameCursor {
         const placer = game.world.resources.get(ComponentPlacer);
         if (!placer.selected) return;
         const reactor = game.world.resources.get(Reactor);
+        if (typeof placer.selected === 'function') {
+            this.placeTile(game, pos, placer.selected(pos));
+            return;
+        }
         const selectedPlacer = ComponentPlacer.COMPONENTS[placer.selected];
         const selectedPlacerInfo = selectedPlacer.info(game);
         if (reactor.money < selectedPlacerInfo.cost) return;
-        if (this.placeTile(game, pos, selectedPlacer.place(game), selectedPlacerInfo.weakType)) {
+        if (
+            this.placeTile(game, pos, selectedPlacer.place(game, pos), selectedPlacerInfo.weakType)
+        ) {
             reactor.money -= selectedPlacerInfo.cost;
             game.setTickRerender();
             game.setNeedsSetup();
@@ -122,7 +131,11 @@ export class GameCursor {
                 ctx.save();
                 ctx.translate(cursor.pos.x, cursor.pos.y);
                 ctx.globalAlpha = 0.5;
-                ATLAS.draw(ctx, ComponentPlacer.COMPONENTS[placer.selected].info(game).texture);
+                if (typeof placer.selected === 'function') {
+                    ATLAS.draw(ctx, 'cursor_selectable');
+                } else {
+                    ATLAS.draw(ctx, ComponentPlacer.COMPONENTS[placer.selected].info(game).texture);
+                }
                 ctx.restore();
             }
             if (cursor.changed && cursor.pos) {

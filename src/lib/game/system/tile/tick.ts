@@ -43,7 +43,7 @@ export const SYSTEM_TICK_BASIC_GENERATOR = new ECS.System(
                 if (!upgrades.basicGenerator[generator.type].autoReplace) {
                     continue;
                 }
-                const cost = upgrades.getBasicGeneratorCost(generator.type, generator.tier);
+                const cost = generator.getCost(upgrades);
                 if (reactor.money >= cost) {
                     reactor.money -= cost;
                     durability.durability = durability.maxDurability;

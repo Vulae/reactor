@@ -13,6 +13,16 @@ export class TileBasicGenerator {
         this.tier = tier;
     }
 
+    public getCost(_upgrades: Upgrades): number {
+        return (
+            {
+                [TileBasicGeneratorType.Uranium]: 10,
+                [TileBasicGeneratorType.Plutonium]: 10
+            }[this.type] *
+            (this.tier + 1) ** 2
+        );
+    }
+
     public getMaxDurability(upgrades: Upgrades): number {
         return (
             {
